@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header"
 // import ProductCard from '../components/ProductCard' //TODO
 import toast from "react-hot-toast";
+import ProductCard from "@/components/ProductCard";
+
 
 export default function Home() {
   const [productos, setProductos] = useState([]) //Esto es un estado
@@ -13,7 +15,7 @@ export default function Home() {
 
   const fetchProductos = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/productos")
+      const res = await fetch("api/productos")
       if(res.ok){
         const data = await res.json()
         setProductos(data)
@@ -46,7 +48,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header
       searchTerm={searchTerm}
-       setSearchTerm={setSearchTerm}
+      setSearchTerm={setSearchTerm}
       />
 
       <main>
@@ -72,10 +74,16 @@ export default function Home() {
 
           :
           (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {
 
-              filteredProductos.map( producto => <p key={producto.id}>{producto.nombre}</p>)
+              filteredProductos.map( producto => 
+              // <p key={producto.id}>{producto.nombre}</p>)
+              <ProductCard 
+                key={producto.id} 
+                producto={producto} 
+              />)
+              
               }
 
             </div>
@@ -85,6 +93,5 @@ export default function Home() {
       </main>
 
     </div>
-   
     );
 }
