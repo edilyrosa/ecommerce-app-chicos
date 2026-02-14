@@ -42,8 +42,8 @@ export function AuthProvider({ children }) { //  <AuthProvider> tag en el layout
 
   const login = async (email, password) => {
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
+      const res = await fetch('/api/auth/login', {  //*No tengo que hacer vificaciones
+        method: 'POST',                             //*tengo que postear y obtener TOKEN.
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });

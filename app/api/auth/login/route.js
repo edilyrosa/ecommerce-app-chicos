@@ -39,7 +39,7 @@ export async function POST(request) { //Realmente es un GET, pero usamos POST po
       );
     }
 
-    //* Crear token JWT
+    //* ⭐⭐⭐⭐Crear token JWT
     const token = crearToken({
       id: user.id,
       email: user.email,

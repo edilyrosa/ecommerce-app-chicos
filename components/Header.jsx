@@ -1,14 +1,16 @@
 
 'use client'
-import React, { useState } from 'react'
 import {ShoppingCart, User, LogOut, Search} from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'; //TODO
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/authContext';
+
 
 export default function Header({searchTerm, setSearchTerm}) {
-   const [user, setUser] = useState('Raul') //TODO; const {user, logout} = UseAuth()
-//    const {user, logout} = UseAuth()
-    const router = useRouter(); //TODO
+    // const [user, setUser] = useState('Raul')//TODO USAR EL CONTEXTO
+const {logout, user} = useAuth()
+
+    const router = useRouter();
     return (
     <header className='bg-blue-600 text-white shadow-lg'>
         <div className='container mx-auto px-4 py-4'>
@@ -22,36 +24,34 @@ export default function Header({searchTerm, setSearchTerm}) {
                     user
                     ?
                         (<>
-                            <span>Hola, {user}</span>
+                            <span>Hola, {user.nombre}</span>  
                             <button
-                            onClick={() => router.push('/carrito')} //TODO
+                            onClick={() => router.push('/carrito')}
                             className='flex items-center gap-2 hover:bg-blue-700 px-3 py-2 rounded transition'
                             >
                                 <ShoppingCart size={20}/>
                                 <span>Carrito</span>
                             </button>
 
-                            <button
-                            onClick={() => router.push('/login')}
-                            className='flex items-center gap-2 hover:bg-blue-700 px-3 py-2 rounded transition'
-                            >
-                                <LogOut size={20}/>
+                            
+                            <button  
+                                className="flex items-center gap-2 hover:bg-blue-700 px-3 py-2 rounded transition"
+                                onClick={logout}
+                                >
+                                <LogOut size={20} />
                                 <span>Salir</span>
                             </button>
                         </>)
                     :
                         (
                             <div className='flex gap-2'>
-                                <Link href={'/'}>
-                                    <button
-                                    className='flex items-center gap-2 hover:bg-blue-700 px-3 py-2 rounded transition'
-                                    >
-                                        <User size={20}/>
-                                        <span>Ingresar</span>
-                                    </button>
-                                </Link>
-
-                             
+                                <button 
+                                    onClick={() => router.push('/login')}
+                                    className="flex items-center gap-2 hover:bg-blue-700 px-3 py-2 rounded transition"
+                                >
+                                    <User size={20} />
+                                    <span>Ingresar</span>
+                                </button>
                             </div>
                         )
                 }

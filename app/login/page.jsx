@@ -1,12 +1,3 @@
-// import React from 'react'
-
-// export default function page() {
-//   return (
-//     <div>LOGIN</div>
-//   )
-// }
-
-
 'use client';
 import { useState } from 'react';
 import { useAuth } from '../../context/authContext';
@@ -15,20 +6,24 @@ import Header from '../../components/Header';
 import toast from 'react-hot-toast';
 
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [nombre, setNombre] = useState('');
+  const [isLogin, setIsLogin] = useState(true); //* Es setteada en el botton toggle registro/login
+  const [loading, setLoading] = useState(false);
+
+  //TODO: deberia crear un obj
+  const [nombre, setNombre] = useState(''); //*Esta vsita servira tamb para el regustro.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   
-  const { login, register } = useAuth();
+  
+  const { login, register } = useAuth(); //*Vamos a usar esta vista para ambas acciones.
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); //*Haremos una accion asincrona.
 
-    if (isLogin) {
+    if (isLogin) { //*TRUE: hacemos login
+      //TODO: validar que esto venga email, password
       const result = await login(email, password);
       if (result.success) {
         toast.success('¡Bienvenido!');
@@ -36,8 +31,8 @@ export default function Login() {
       } else {
         toast.error(result.error);
       }
-    } else {
-      if (!nombre.trim()) {
+    } else {//*FALSE: hacemos register
+      if (!nombre.trim()) {//*validacion
         toast.error('El nombre es requerido');
         setLoading(false);
         return;
@@ -107,8 +102,8 @@ export default function Login() {
               {loading ? 'Procesando...' : (isLogin ? 'Ingresar' : 'Registrarse')}
             </button>
           </form>
-          
           <div className="mt-6 text-center">
+          {/*//* Boton que cambia el form para: registramos o logeamos */}
             <button
               onClick={() => setIsLogin(!isLogin)}
               className="text-blue-600 hover:underline"

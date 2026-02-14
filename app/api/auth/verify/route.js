@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verificarToken } from '../../../../lib/auth';
+import { verificarToken } from '@/lib/auth';
 
 export async function GET(request) { //*El que apunte a este endpoint enviara cabeceras con token, para verificar
   try {
