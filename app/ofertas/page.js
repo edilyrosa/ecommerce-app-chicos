@@ -61,15 +61,12 @@ export default function Home1() {
   };
 
   // Manejar click en producto (solo en desktop)
-  // const handleProductClick = (productId) => {
-  //   if (window.innerWidth >= 768) { // Solo en MD+
-  //     setZoomedProductId(productId)
-  //   }
-  // }
-
   const handleProductClick = (productId) => {
-  setZoomedProductId(productId) // Ahora se ejecuta siempre, sin importar el ancho
-}
+    if (window.innerWidth >= 768) { // Solo en MD+
+      setZoomedProductId(productId)
+    }
+  }
+
   // Cerrar zoom
   const handleCloseZoom = () => {
     setZoomedProductId(null)
@@ -110,7 +107,7 @@ export default function Home1() {
             </div>
           </div>
 
-          <div className="mt-3 w-16 h-1 bg-linear-to-r from-blue-600 to-indigo-600 rounded-full" />
+          <div className="mt-3 w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full" />
 
           {!loading && filteredProductos.length > 0 && (
             <p className="text-sm md:text-base text-gray-500 mt-2 font-medium">
@@ -119,18 +116,15 @@ export default function Home1() {
           )}
         </div>
 
-        {/* //*ESTADOS DE CARGA Y RESULTADOS: Skeleton */}
+        {/* ESTADOS DE CARGA Y RESULTADOS */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
                 <div className="bg-gray-200 h-40 md:h-48 rounded-lg mb-3"></div>
-                <div className="bg-yellow-100 h-4 rounded mb-2"></div>
-                
-                <div className="flex justify-between items-center gap-2">
-                  <div className="w-[70%] flex-1 bg-gray-200 h-10 rounded"></div>
-                  <div className="bg-green-100 h-10 w-10 rounded-full m"></div>
-                </div>
+                <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                <div className="bg-gray-200 h-4 rounded w-3/4 mb-3"></div>
+                <div className="bg-gray-200 h-8 rounded"></div>
               </div>
             ))}
           </div>
@@ -182,147 +176,80 @@ export default function Home1() {
 
       {/* ESTILOS GLOBALES */}
    
+
+
 <style jsx global>{`
-
   @keyframes bounce-short {
-
     0%, 100% { transform: translateY(0); }
-
     50% { transform: translateY(-5px); }
-
   }
-
- 
-
+  
   .animate-bounce-short {
-
     animation: bounce-short 2s ease-in-out infinite;
-
   }
-
-
 
   @keyframes fadeIn {
-
     from { opacity: 0; }
-
     to { opacity: 1; }
-
   }
-
-
 
   .animate-fadeIn {
-
     animation: fadeIn 0.3s ease-out;
-
   }
-
-
 
   /* ZOOM CON CLICK - Solo en pantallas >= MD (768px+) */
-
   @media (min-width: 768px) {
-
     .products-grid-zoom {
-
       padding: 1rem 0;
-
     }
-
-
 
     .products-grid-zoom .product-card-zoom {
-
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
       cursor: pointer;
-
     }
-
-
 
     /* Card en estado zoom (centrada) - AQUÍ ESTÁ EL CAMBIO */
-
     .products-grid-zoom .product-card-zoom.zoomed {
-
       position: fixed;
-
       top: 50%;
-
       left: 50%;
-
       transform: translate(-50%, -50%) scale(2); /* ← CAMBIO: scale(1) a scale(2) */
-
       z-index: 100;
-
       max-width: 90vw;
-
       max-height: 90vh;
-
       overflow-y: auto;
-
       box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
-
       animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
     }
-
-
 
     @keyframes zoomIn {
-
       from {
-
         transform: translate(-50%, -50%) scale(0.5); /* ← CAMBIO: scale(0.8) a scale(0.5) */
-
         opacity: 0;
-
       }
-
       to {
-
         transform: translate(-50%, -50%) scale(2); /* ← CAMBIO: scale(1) a scale(2) */
-
         opacity: 1;
-
       }
-
     }
-
-
 
     /* Cards hermanas cuando hay una en zoom */
-
     .products-grid-zoom.has-zoomed .product-card-zoom:not(.zoomed) {
-
       transform: scale(0.85);
-
       opacity: 0.3;
-
       filter: blur(3px) grayscale(40%);
-
       pointer-events: none;
-
     }
-
   }
-
-
 
   /* En móvil (<768px) sin efecto zoom */
-
   @media (max-width: 767px) {
-
     .products-grid-zoom .product-card-zoom:active {
-
       transform: scale(0.97);
-
     }
-
   }
-
 `}</style>
+
 
     </div>
   );

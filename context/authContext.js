@@ -1,32 +1,54 @@
 'use client';
-import { createContext, useContext, useState, useEffect } from 'react';
-import Cookies from 'js-cookie'; //*para guardar el token
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 
-const AuthContext = createContext(); //para: return <AuthContext.Provider y useContext(AuthContext)
+const AuthContext = createContext();
 
-export function AuthProvider({ children }) { //  <AuthProvider> tag en el layout
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cartCount, setCartCount] = useState(0);  //& Estado para el contador de items del carrito
   const router = useRouter();
 
-  //? Quien sesiona (usuario) tiene cookie de token valida? para capturar la info y settear VE User
+  //& Función para actualizar el contador de items del carrito
+  const updateCartCount = useCallback(async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      setCartCount(0); //Sin token, no hay usuario con carrito.
+      return;
+    }
+    try {
+      const res = await fetch('/api/carrito', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        //Ternadio: reduce() → Reducir un array a un valor →  Σ(it.cantidad)
+                const totalUnits = Array.isArray(data) ? data.reduce((s, it) => s + (it.cantidad || 0), 0) : 0;
+        setCartCount(totalUnits);
+      }
+    } catch (error) {
+      console.error('Error al sincronizar cartCount:', error);
+    }
+  }, []);
+
+  // Verifica si hay una sesión activa al cargar la app
   const checkAuth = async () => {
-    const token = Cookies.get('token'); //*para guardar el token
+    const token = Cookies.get('token');
     if (token) {
       try {
-        const res = await fetch(
-          '/api/auth/verify',  //todo: Crearemos back que responda a este get-endpoint → devuelve al usuario guardado en el token.
-          { headers: { 'Authorization': `Bearer ${token}`}} //& Este get requiere de autorizacion (cabeceras). 
-        );
+        const res = await fetch('/api/auth/verify', { 
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (res.ok) {
-          const data = await res.json(); //la respuesta es el usuario, guardado en el obj "user"
-          setUser(data.user);   //? Aca seteamos al usuario guradado en cookie
+          const data = await res.json();
+          setUser(data.user);
+          await updateCartCount(); // Sincroniza carrito al verificar usuario
         } else {
           Cookies.remove('token');
         }
       } catch (error) {
-        console.error('Error verificando auth:', error);
         Cookies.remove('token');
       }
     }
@@ -37,21 +59,22 @@ export function AuthProvider({ children }) { //  <AuthProvider> tag en el layout
     (async () => {
       await checkAuth();
     })();
-  }, []);//al cargase mira si el usuario tiene cookie de token y si es valida
+  }, [updateCartCount]); //& Recarga cada vez que cambia el contador del carrito, para mantenerlo sincronizado
 
 
   const login = async (email, password) => {
     try {
-      const res = await fetch('/api/auth/login', {  //*No tengo que hacer vificaciones
-        method: 'POST',                             //*tengo que postear y obtener TOKEN.
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
       
       if (res.ok) {
         const data = await res.json();
-        Cookies.set('token', data.token, { expires: 7 }); //*para guardar el token
+        Cookies.set('token', data.token, { expires: 7 });
         setUser(data.user);
+        await updateCartCount(); // Sincroniza carrito justo después de loguear
         return { success: true };
       } else {
         const error = await res.json();
@@ -68,22 +91,19 @@ export function AuthProvider({ children }) { //  <AuthProvider> tag en el layout
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, email, password })
-        
       });
       
       if (res.ok) {
         const data = await res.json();
-        Cookies.set('token', data.token, { expires: 7 }); //*para guardar el token
+        Cookies.set('token', data.token, { expires: 7 });
         setUser(data.user);
-        console.log(data.user);
-        
+        await updateCartCount();
         return { success: true };
       } else {
         const error = await res.json();
         return { success: false, error: error.error || 'Error al registrarse' };
       }
     } catch (error) {
-      console.log('ERRORRRRRR', error);
       return { success: false, error: 'Error de conexión' };
     }
   };
@@ -91,15 +111,27 @@ export function AuthProvider({ children }) { //  <AuthProvider> tag en el layout
   const logout = () => {
     Cookies.remove('token');
     setUser(null);
+    setCartCount(0);
     router.push('/');
   };
 
+ 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login,      
+      register,   
+      logout, 
+      loading, 
+      cartCount,  //& Header necesita este estado para mostrar el contador de items en el carrito
+      setCartCount, 
+      updateCartCount  //& ProductCard neceista esta funcion para mantener el contador sincronizado después de acciones que modifiquen el carrito
+    }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

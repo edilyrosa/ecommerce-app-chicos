@@ -4,6 +4,7 @@ import { useAuth } from '../../context/authContext';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import toast from 'react-hot-toast';
+import PromoBanner from "@/components/PromoBanner"
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true); //* Es setteada en el botton toggle registro/login
@@ -18,7 +19,7 @@ export default function Login() {
   const { login, register } = useAuth(); //*Vamos a usar esta vista para ambas acciones.
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => { //& <form onSubmit={handleSubmit} className="space-y-4">
     e.preventDefault();
     setLoading(true); //*Haremos una accion asincrona.
 
@@ -51,14 +52,21 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
+          {/* Banner promocional */}
+        <div className="mt-3 md:mt-4 mb-4 md:mb-6">
+          <PromoBanner />
+        </div>
+      
+      
       <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+          
           <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
             {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
           </h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {!isLogin && ( //*Si es FALSE - REGISTER, necesitamos el NOMBRE
               <div>
                 <label className="block text-gray-700 mb-2">Nombre</label>
                 <input
@@ -102,6 +110,7 @@ export default function Login() {
               {loading ? 'Procesando...' : (isLogin ? 'Ingresar' : 'Registrarse')}
             </button>
           </form>
+
           <div className="mt-6 text-center">
           {/*//* Boton que cambia el form para: registramos o logeamos */}
             <button
@@ -111,6 +120,7 @@ export default function Login() {
               {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
             </button>
           </div>
+
         </div>
         
       </main>
