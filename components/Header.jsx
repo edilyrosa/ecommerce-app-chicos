@@ -259,7 +259,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
 
     // Componente SearchBar con acceso a todas las variables
     const renderSearchBar = () => (
-        <div className=' bg-linear-to-r from-[#001C3D] via-[#003066] to-[#001C3D] text-white shadow-lg'>
+        <div className='text-white shadow-lg'>
             <div className='container mx-auto px-4 py-2.5'>
                 <div className='flex gap-2 items-center relative'>
                     
@@ -279,7 +279,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                         </button>
 
                         {showMenu && (
-                            <div className='absolute top-full left-0 mt-2 w-52 bg-blue-900 border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in zoom-in duration-200'>
+                            <div className='absolute top-full left-0 mt-2 w-52  bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in zoom-in duration-200'>
                                 <div className='flex flex-col gap-1'>
                                     {categorias.map((cat) => (
                                         <button
@@ -288,7 +288,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                                             className={`w-full text-left py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
                                                 currentCategory === cat.id 
                                                 ? 'bg-yellow-400 text-blue-900' 
-                                                : 'text-white hover:bg-blue-800'
+                                                : 'text-white hover:bg-blue-300'
                                             }`}
                                         >
                                             {cat.label}
@@ -306,7 +306,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                             placeholder='Buscar productos...'
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className='w-full pl-10 pr-4 py-2 text-sm text-white bg[#001C3D] border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
+                            className='w-full pl-10 pr-4 py-2 text-sm text-white  bg-[#00162f] border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
                         />
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 group-focus-within:text-yellow-400 transition-colors' />
                     </div>
@@ -318,15 +318,15 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
     return (
 <>
            {/* HEADER: Logo y Navegación */}
-            <header className='md:sticky md:top-0 z-50 shadow-2xl bg-linear-to-r from-[#001C3D] via-[#003066] to-[#001C3D] text-white'>
-                <div className='bg-linear-to-r from-[#001C3D] via-[#003066] to-[#001C3D] text-white shadow-lg'>
+            <header className='md:sticky md:top-0 z-50 shadow-2xl text-white bg-[#00162f]'>
+                <div className=' text-white shadow-lg'>
                     <div className='container mx-auto px-4 py-2.5 flex items-center justify-between'>
                         
                         {/* Logo */}
                         <Link href={'/'} className="shrink-0">
                         <div className='flex items-center gap-3'>
                            <img src='/logo.png' alt='Logo' className='w-12 md:w-14 object-contain' />
-                           <span className='text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
+                           <span className=' text-[10px] md:text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
                                 BODEGA DE AZULEJOS
                             </span>
 
