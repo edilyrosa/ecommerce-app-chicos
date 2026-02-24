@@ -87,7 +87,7 @@ export default function Home1() {
         setCategory={setCategory} 
         currentCategory={category}
         />
-    \
+    
       
       {/* Banner promocional */}
       <div className="container mx-auto px-3 md:px-6">
@@ -133,7 +133,7 @@ export default function Home1() {
                 
                 <div className="flex justify-between items-center gap-2">
                   <div className="w-[70%] flex-1 bg-gray-200 h-10 rounded"></div>
-                  <div className="bg-green-100 h-10 w-10 rounded-full m"></div>
+                  <div className="bg-blue-200 h-10 w-10 rounded-full m"></div>
                 </div>
               </div>
             ))}
@@ -159,7 +159,8 @@ export default function Home1() {
         ) : (
           <>
             {/* GRID DE PRODUCTOS */}
-            <div className={`products-grid-zoom grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 lg:gap-8 mb-10 ${zoomedProductId ? 'has-zoomed' : ''}`}>
+            <div className={`products-grid-zoom grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 
+              gap-3 md:gap-6 lg:gap-8 mb-10 ${zoomedProductId ? 'has-zoomed' : ''}`}>
               {filteredProductos.map(producto => (
                 <ProductCard 
                   key={producto.id} 
@@ -174,7 +175,7 @@ export default function Home1() {
             {/* OVERLAY OSCURO cuando hay zoom */}
             {zoomedProductId && (
               <div 
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] animate-fadeIn"
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-90 animate-fadeIn"
                 onClick={handleCloseZoom}
               />
             )}
@@ -226,13 +227,12 @@ export default function Home1() {
 
   /* ZOOM CON CLICK - Solo en pantallas >= MD (768px+) */
 
-  @media (min-width: 768px) {
+  @media(max-width:768px) {
 
-    .products-grid-zoom {
-
-      padding: 1rem 0;
-
+    .product-card-zoom.zoomed {
+      margin: 2rem 1rem 2rem 0;
     }
+}
 
 
 
