@@ -306,7 +306,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                             placeholder='Buscar productos...'
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className='w-full pl-10 pr-4 py-2 text-sm text-white bg-blue-800/50 border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
+                            className='w-full pl-10 pr-4 py-2 text-sm text-white bg[#001C3D] border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
                         />
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 group-focus-within:text-yellow-400 transition-colors' />
                     </div>
@@ -324,7 +324,13 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                         
                         {/* Logo */}
                         <Link href={'/'} className="shrink-0">
+                        <div className='flex items-center gap-3'>
                            <img src='/logo.png' alt='Logo' className='w-12 md:w-14 object-contain' />
+                           <span className='text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
+                                BODEGA DE AZULEJOS
+                            </span>
+
+                        </div>
                         </Link>
 
                         {/* MÓVIL: Solo icono de perfil */}
