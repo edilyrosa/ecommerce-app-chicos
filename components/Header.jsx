@@ -299,7 +299,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                         )}
                     </div>
 
-                    {/* Input de búsqueda */}
+                    {/* //* Input de búsqueda */}
                     <div className='relative flex-1 group'>
                         <input
                             type='text'
