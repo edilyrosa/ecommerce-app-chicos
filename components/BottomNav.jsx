@@ -29,10 +29,10 @@ export default function BottomNav({ setCategory, currentCategory }) {
     return (
         <nav className='md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl'>
             
-            {/* --- DESPLEGABLE FLOTANTE --- */}
+            {/* --- DESPLEGABLE FLOTANTE, //!LO QUITAMOS? --- */}
             {showCategories && (
                 <div className='absolute bottom-full left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] p-4 animate-in slide-in-from-bottom duration-300 rounded-t-2xl'>
-                   
+                
                     <div className='flex justify-between items-center mb-4 px-2'>
                         <span className='font-bold text-gray-800'>Filtrar por Categoría</span>
                         <button onClick={() => setShowCategories(false)} className='p-1 bg-gray-100 rounded-full'>
@@ -70,8 +70,8 @@ export default function BottomNav({ setCategory, currentCategory }) {
                     <span className='text-[10px] font-medium'>Inicio</span>
                 </button>
 
-                {/* --- BOTÓN CATEGORÍAS (CONTROLADOR) --- */}
-                <button
+                {/* --- BOTÓN CATEGORÍAS (CONTROLADOR) //! LO QUITAMOS? --- */}
+                {/* <button
                     onClick={() => setShowCategories(!showCategories)}
                     className={`relative flex flex-col items-center justify-center gap-1 transition-colors ${
                         showCategories || currentCategory !== 'todas' ? 'text-blue-600' : 'text-gray-500'
@@ -82,6 +82,12 @@ export default function BottomNav({ setCategory, currentCategory }) {
                     {currentCategory !== 'todas' && (
                         <div className='absolute top-2 right-4 w-2 h-2 bg-blue-600 rounded-full border border-white' />
                     )}
+                </button> */}
+
+                {/* PISOS */}
+                <button onClick={() => router.push('/pisos')} className={`flex flex-col items-center justify-center gap-1 ${pathname === '/ofertas' ? 'text-blue-600' : 'text-gray-500'}`}>
+                    <Grid size={22} />
+                    <span className='text-[10px] font-medium'>Pisos</span>
                 </button>
 
                 {/* OFERTAS */}

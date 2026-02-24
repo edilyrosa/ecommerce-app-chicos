@@ -76,14 +76,18 @@ export default function Home1() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-8">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-8 ">
       {/* Header con props de búsqueda y categoría */}
+ 
+
+
       <Header 
         searchTerm={searchTerm} 
         setSearchTerm={setSearchTerm}
         setCategory={setCategory} 
         currentCategory={category}
-      />
+        />
+    \
       
       {/* Banner promocional */}
       <div className="container mx-auto px-3 md:px-6">
@@ -310,15 +314,7 @@ export default function Home1() {
 
 
 
-  /* En móvil (<768px) sin efecto zoom */
 
-  @media (max-width: 767px) {
-
-    .products-grid-zoom .product-card-zoom:active {
-
-      transform: scale(0.97);
-
-    }
 
   }
 

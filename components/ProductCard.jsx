@@ -20,10 +20,6 @@ export default function ProductCard({ producto, onClick, isZoomed, onClose }) { 
         : []
 
 
-
-
-
-
     //* Carrusel automático
     useEffect(() => {
         if (imagenes.length <= 1) return; // Mas de una imagen para activar carrusel
@@ -140,7 +136,7 @@ export default function ProductCard({ producto, onClick, isZoomed, onClose }) { 
             <button 
                 onClick={handleCompra}
                 disabled={isAdding || producto.stock <= 0}
-                className='absolute bottom-3 right-3 z-20 bg-green-500 hover:bg-green-600 text-white w-10 h-10 md:w-11 md:h-11 rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed'
+                className='absolute bottom-3 right-3 z-20 bg-[#003066] hover:bg-[#0055b7] text-white w-10 h-10 md:w-11 md:h-11 rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed'
             >
                 {isAdding ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
