@@ -259,8 +259,8 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
 
     // Componente SearchBar con acceso a todas las variables
     const renderSearchBar = () => (
-        <div className='text-white shadow-lg'>
-            <div className='container mx-auto px-4 py-2.5'>
+        <div className='text-white shadow-lg '>
+            <div className='container mx-auto px-4 py-2.5  bg-[#00162f]'>
                 <div className='flex gap-2 items-center relative'>
                     
                     {/* Botón de Categorías */}
@@ -288,7 +288,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                                             className={`w-full text-left py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
                                                 currentCategory === cat.id 
                                                 ? 'bg-yellow-400 text-blue-900' 
-                                                : 'text-white hover:bg-blue-300'
+                                                : 'text-white hover:text-[#00162f] hover:bg-white'
                                             }`}
                                         >
                                             {cat.label}
@@ -326,7 +326,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                         <Link href={'/'} className="shrink-0">
                         <div className='flex items-center gap-3'>
                            <img src='/logo.png' alt='Logo' className='w-12 md:w-14 object-contain' />
-                           <span className=' text-[10px] md:text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
+                           <span className=' text-[9px] md:text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
                                 BODEGA DE AZULEJOS
                             </span>
 
