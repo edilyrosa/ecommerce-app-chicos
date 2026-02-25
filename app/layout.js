@@ -15,23 +15,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "E-commerce App 🛒 CESAR",
-  description: "A simple e-commerce application built with Next.js",
+  title: "Bodega de Azulejos",
+  description: "Tienda online de azulejos y materiales para construcción",
   
   //TODO:EXTRAS PARA SEO Y REDES SOCIALES👇
-  keywords: "comprar, productos, carrito, nextjs, ecommerce, venezuela",
+  keywords: "azulejos, materiales de construcción, ecommerce, tienda online, compra fácil",
   // 🌐 OPEN GRAPH (Facebook, WhatsApp)
   openGraph: {
-    title: "E-commerce App 🛒",
-    description: "La mejor tienda online con Next.js y Supabase",
+    title: "Bodega de Azulejos",
+    description: "Compra online fácil y rápido",
     url: "https://tu-dominio.com",
-    siteName: "E-commerce App",
+    siteName: "Tienda online de azulejos y materiales para construcción",
     images: [
       {
         url: "/og-image.jpg",  // 1200x630px
         width: 1200,
         height: 630,
-        alt: "E-commerce App"
+        alt: "Bodega de Azulejos"
       }
     ],
     locale: "es_VE",
@@ -41,8 +41,8 @@ export const metadata = {
   // 🐦 X/TWITTER (Twitter Cards)
   twitter: {
     card: "summary_large_image",
-    title: "E-commerce App 🛒",
-    description: "Compra online fácil y rápido",
+    title: "Bodega de Azulejos",
+    description: "Tienda online de azulejos y materiales para construcción",
     images: ["/twitter-image.jpg"],  // 1200x675px
     creator: "@tuusuario"
   },

@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import {supabase} from "@/lib/supabase";
 
-// app.get('/api/productos', async (req, res, next, error) => {}
-// const id =  req.query.id
-// )
 
 export async function GET() { //Responder a los fetch('api/productos')
     try{

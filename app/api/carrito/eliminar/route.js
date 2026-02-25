@@ -64,9 +64,10 @@ export async function DELETE(request) {
       );
     }
 
-    return NextResponse.json({ 
-      message: 'Producto eliminado del carrito' 
-    });
+  return NextResponse.json({ 
+    // message: 'Producto eliminado del carrito' ANTES
+    message: `${item.item_type === 'product' ? 'Producto' : 'Piso'} eliminado del carrito`  //!OJITO ACA
+  });
 
   } catch (error) {
     console.error('Error en eliminar carrito:', error);

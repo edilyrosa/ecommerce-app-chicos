@@ -129,21 +129,19 @@ export default function Home1() {
             ))}
           </div>
         ) : filteredProductos.length === 0 ? (
-          <div className="text-center py-16 md:py-24">
-            <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-gray-100 rounded-full mb-4">
-              <svg className="w-8 h-8 md:w-10 md:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-              </svg>
+           <div className="text-center py-12 md:py-16 bg-white rounded-xl md:rounded-2xl shadow-md border border-blue-50">
+            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-full bg-linear-to-br from-blue-100 to-yellow-100 flex items-center justify-center">
+              <span className="text-2xl md:text-3xl">🔍</span>
             </div>
-            <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">No se encontraron productos</h3>
-            <p className="text-sm md:text-base text-gray-500 mb-6">
-              Prueba con otros términos o cambia la categoría seleccionada.
+            <p className="text-base md:text-lg text-gray-600 mb-4 font-semibold">
+              No se encontraron productos con  el termino: {searchTerm}
             </p>
-            <button
-              onClick={() => {setSearchTerm(''); setCategory('todas');}}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg"
+            <button 
+              onClick={() => setSearchTerm('')} 
+              className="px-6 py-2.5 rounded-xl font-bold text-sm md:text-base transition-all shadow-lg"
+              style={{ backgroundColor: '#00162f', color: 'white' }}
             >
-              Ver todos los productos
+              Limpiar búsqueda
             </button>
           </div>
         ) : (
