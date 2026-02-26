@@ -3,15 +3,15 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET(request, { params }) {
     try {
-        // 1. Descomprimir params (Obligatorio en Next.js 15+)
+        //* 2. Extraer el nombre del piso desde los parámetros de la ruta
         const { nombre } = await params;
 
-        // 2. Formatear el nombre (de "alabama-gris" a "alabama gris")
+        // 2. Formatear el nombre (de "alabama-gris" a "alabama gris") //TODO: POR LO IMPLEMENTO, LO LO ESTOY USANDO
         const nombreDecodificado = decodeURIComponent(nombre).replace(/-/g, ' ');
 
         console.log(`🔎 Buscando piso: ${nombreDecodificado}`);
 
-        // 3. Consulta a la base de datos usando tu cliente importado
+        //* 3. Consulta a la base de datos si existe un piso con ese nombre
         const { data: piso, error } = await supabase
             .from('pisos')
             .select('*')
@@ -23,8 +23,8 @@ export async function GET(request, { params }) {
             return NextResponse.json({ error: 'Hola Piso no encontrado 2' }, { status: 404 });
         }
 
-        // 4. Responder con los datos del piso
-        return NextResponse.json(piso);
+        //* 4. Responder con los datos del piso
+        return NextResponse.json(piso); //* y se lo envío al front para que lo muestre en la página dinámica
 
     } catch (error) {
         console.error('💥 Error en el servidor:', error);

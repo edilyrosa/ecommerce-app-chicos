@@ -15,7 +15,9 @@ import Cookies from 'js-cookie'
 import { useAuth } from '@/context/authContext'
 
 export default function PisoDetailPage() {
+  //* para la ruta dinámica y navegación
   const params = useParams()
+
   const router = useRouter()
   const { user, updateCartCount } = useAuth()
   
@@ -24,7 +26,7 @@ export default function PisoDetailPage() {
   const [currentImg, setCurrentImg] = useState(0)
   const [showImageModal, setShowImageModal] = useState(false)
 
-  // Estados calculadora
+  //* Estados calculadora
   const [ancho, setAncho] = useState('')
   const [largo, setLargo] = useState('')
   const [incluirExtra, setIncluirExtra] = useState(true)
@@ -34,14 +36,14 @@ export default function PisoDetailPage() {
 
   useEffect(() => {
     if (params.nombre) {
-      fetchPiso()
+      fetchPiso() //* Llama a la función para obtener el piso cada vez que cambia el nombre en la URL
     }
-  }, [params.nombre])
+  }, [params.nombre]) //* Solo se vuelve a ejecutar si cambia el nombre en la URL
 
   const fetchPiso = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/pisos/${params.nombre}`)
+      const res = await fetch(`/api/pisos/${params.nombre}`) //* Llama a tu API interna para obtener el piso por nombre
       
       if (!res.ok) throw new Error('No encontrado')
 
@@ -70,14 +72,16 @@ export default function PisoDetailPage() {
       return
     }
 
+    //* Calcula el área total a cubrir
     let area = anchoNum * largoNum
-    
+    //* Si el usuario quiere incluir un extra para cortes, aumenta el área en un 10%
     if (incluirExtra) {
       area = area * 1.1
     }
 
     setAreaTotal(area)
-    const cajas = Math.ceil(area / piso.m2_por_caja)
+    //* Redondea hacia arriba para asegurar que siempre tengas suficientes cajas
+    const cajas = Math.ceil(area / piso.m2_por_caja) 
     setCajasNecesarias(cajas)
 
     toast.success(`📦 Necesitas ${cajas} caja${cajas !== 1 ? 's' : ''}`)
@@ -382,7 +386,7 @@ export default function PisoDetailPage() {
               ))}
             </div>
 
-            {/* CALCULADORA COMPACTA */}
+            {/* //*  ******************************CALCULADORA COMPACTA */}
             <div className='rounded-xl p-3 lg:p-4 border-2' style={{ backgroundColor: '#00162f', borderColor: '#00162f' }}>
               <div className='flex items-center gap-2 mb-3'>
                 <div className='bg-yellow-400 p-1.5 rounded-lg'>
@@ -486,7 +490,7 @@ export default function PisoDetailPage() {
                       </div>
                     </div>
 
-                    {/* Botón */}
+                    {/*//!  Botón */}
                     {stockInsuficiente ? (
                       <>
                         <button
