@@ -184,138 +184,116 @@ export default function Home1() {
       {/* ESTILOS GLOBALES */}
   
 <style jsx global>{`
-
   @keyframes bounce-short {
-
     0%, 100% { transform: translateY(0); }
-
     50% { transform: translateY(-5px); }
-
   }
-
- 
 
   .animate-bounce-short {
-
     animation: bounce-short 2s ease-in-out infinite;
-
   }
-
-
 
   @keyframes fadeIn {
-
     from { opacity: 0; }
-
     to { opacity: 1; }
-
   }
-
-
 
   .animate-fadeIn {
-
     animation: fadeIn 0.3s ease-out;
-
   }
 
-
-
-  /* ZOOM CON CLICK - Solo en pantallas >= MD (768px+) */
-
+  /* Responsive para móviles */
   @media(max-width:768px) {
-
-    .product-card-zoom.zoomed {
+    .products-grid-zoom .product-card-zoom.zoomed {
       margin: 0.5rem 1rem 1rem 0;
     }
-}
+  }
 
-
-
-    .products-grid-zoom .product-card-zoom {
-
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-      cursor: pointer;
-
-    }
-
-
-
-    /* Card en estado zoom (centrada) - AQUÍ ESTÁ EL CAMBIO */
-
+  /* Estilos para desktop */
+  @media(min-width:768px) {
     .products-grid-zoom .product-card-zoom.zoomed {
-
-      position: fixed;
-
-      top: 50%;
-
-      left: 50%;
-
-      transform: translate(-50%, -50%) scale(2); /* ← CAMBIO: scale(1) a scale(2) */
-
-      z-index: 100;
-
-      max-width: 90vw;
-
-      max-height: 90vh;
-
-      overflow-y: auto;
-
-      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
-
-      animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
+      max-width: 30vw;
     }
-
-
-
-    @keyframes zoomIn {
-
-      from {
-
-        transform: translate(-50%, -50%) scale(0.5); /* ← CAMBIO: scale(0.8) a scale(0.5) */
-
-        opacity: 0;
-
-      }
-
-      to {
-
-        transform: translate(-50%, -50%) scale(2); /* ← CAMBIO: scale(1) a scale(2) */
-
-        opacity: 1;
-
-      }
-
-    }
-
-
-
-    /* Cards hermanas cuando hay una en zoom */
-
-    .products-grid-zoom.has-zoomed .product-card-zoom:not(.zoomed) {
-
-      transform: scale(0.85);
-
-      opacity: 0.3;
-
-      filter: blur(3px) grayscale(40%);
-
-      pointer-events: none;
-
-    }
-
   }
 
-
-
-
-
+  .products-grid-zoom .product-card-zoom {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
   }
 
+  /* CARD EN ZOOM - CONTROL DE TAMAÑO */
+  .products-grid-zoom .product-card-zoom.zoomed {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.5);
+    z-index: 100;
+    
+    /* TAMAÑO MÁXIMO CONTROLADO */
+    max-width: 90vw;
+    max-height: 95vh;
+    width: auto;
+    height: auto;
+    
+    /* SCROLL INTERNO PARA CONTENIDO SOBRANTE */
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+    /* ESTILOS */
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
+    animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* IMPORTANTE: La card NO crecerá más de 95vh */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ÁREA DE CONTENIDO CON SCROLL INDEPENDIENTE */
+  .products-grid-zoom .product-card-zoom.zoomed .product-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* IMPORTANTE: Permite que el scroll funcione correctamente */
+  }
+
+  /* IMAGEN EN ZOOM - TAMAÑO CONTROLADO */
+  .products-grid-zoom .product-card-zoom.zoomed .product-image-container {
+    flex-shrink: 0;
+    height: 250px; /* Altura fija para la imagen */
+  }
+
+  /* DESCRIPCIÓN EN ZOOM - CON ALTURA FIJA */
+  .products-grid-zoom .product-card-zoom.zoomed .description-container {
+    max-height: 120px; /* Altura fija para la descripción */
+    overflow-y: auto;
+  }
+
+  /* BOTÓN VER MÁS - SIN AFECTAR ALTURA */
+  .products-grid-zoom .product-card-zoom.zoomed .ver-mas-btn {
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+
+  @keyframes zoomIn {
+    from {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(1.5);
+      opacity: 1;
+    }
+  }
+
+  /* Cards hermanas cuando hay una en zoom */
+  .products-grid-zoom.has-zoomed .product-card-zoom:not(.zoomed) {
+    transform: scale(0.85);
+    opacity: 0.3;
+    filter: blur(3px) grayscale(40%);
+    pointer-events: none;
+  }
 `}</style>
 
     </div>
   );
 }
+
