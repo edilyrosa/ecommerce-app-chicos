@@ -71,12 +71,17 @@ export default function TablaItems({
         const keyDelete = `${item.carrito_id}-delete`;
 
         return (
+          <>
+          <h3 className="font-bold text-[10px] md:text-base text-gray-800 line-clamp-1 mb-1">
+                    {item.nombre}
+                  </h3>
           <div 
-            key={item.carrito_id} 
-            className={`p-4 md:p-5 rounded-2xl shadow-sm border-2 flex gap-4 md:gap-5 transition-all duration-300 ${
-              esError ? 'bg-red-50 border-red-400' : 'bg-white border-transparent'
-            }`}
-          >
+              key={item.carrito_id} 
+              className={`p-4 md:p-5 rounded-2xl shadow-sm border-2 flex gap-4 md:gap-5 transition-all duration-300 ${
+                esError ? 'bg-red-50 border-red-400' : 'bg-white border-transparent'
+              }`}
+            >
+              
             {/* Imagen */}
             <img
               src={getPrimeraImagen(item.imagen_url)}
@@ -87,10 +92,11 @@ export default function TablaItems({
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start gap-3">
                 {/* Info del producto */}
+                
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm md:text-base text-gray-800 line-clamp-1 mb-1">
+                  {/*//!  <h3 className="font-bold text-[10px] md:text-base text-gray-800 line-clamp-1 mb-1">
                     {item.nombre}
-                  </h3>
+                  </h3> */}
                   
                   {/* Indicador de stock */}
                   <div className="flex items-center gap-2 mb-2">
@@ -119,8 +125,8 @@ export default function TablaItems({
 
                 {/* Controles */}
                 {mostrarControles && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="flex items-center bg-gray-100 rounded-xl p-1">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center bg-gray-100 rounded-xl ">
                       {/* Botón Disminuir */}
                       <button 
                         onClick={() => handleAjustar(item.carrito_id, -1)}
@@ -193,6 +199,11 @@ export default function TablaItems({
               )}
             </div>
           </div>
+          </>
+     
+          
+          
+
         );
       })}
     </div>

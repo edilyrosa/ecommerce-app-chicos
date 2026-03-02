@@ -60,12 +60,6 @@ export default function Home1() {
     }
   };
 
-  // Manejar click en producto (solo en desktop)
-  // const handleProductClick = (productId) => {
-  //   if (window.innerWidth >= 768) { // Solo en MD+
-  //     setZoomedProductId(productId)
-  //   }
-  // }
 
   const handleProductClick = (productId) => {
   setZoomedProductId(productId) // Ahora se ejecuta siempre, sin importar el ancho
@@ -206,13 +200,14 @@ export default function Home1() {
   @media(max-width:768px) {
     .products-grid-zoom .product-card-zoom.zoomed {
       margin: 0.5rem 1rem 1rem 0;
+      max-width: 90vw;
     }
   }
-
+  
   /* Estilos para desktop */
   @media(min-width:768px) {
     .products-grid-zoom .product-card-zoom.zoomed {
-      max-width: 30vw;
+      max-width: 45vw;
     }
   }
 
@@ -230,10 +225,9 @@ export default function Home1() {
     z-index: 100;
     
     /* TAMAÑO MÁXIMO CONTROLADO */
-    max-width: 90vw;
-    max-height: 95vh;
-    width: auto;
-    height: auto;
+    height: 55vh;
+    width: 60vw;
+    max-height: 90vh;
     
     /* SCROLL INTERNO PARA CONTENIDO SOBRANTE */
     overflow-y: auto;
@@ -258,7 +252,6 @@ export default function Home1() {
   /* IMAGEN EN ZOOM - TAMAÑO CONTROLADO */
   .products-grid-zoom .product-card-zoom.zoomed .product-image-container {
     flex-shrink: 0;
-    height: 250px; /* Altura fija para la imagen */
   }
 
   /* DESCRIPCIÓN EN ZOOM - CON ALTURA FIJA */
