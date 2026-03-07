@@ -32,7 +32,7 @@ export default function PisosPage() {
         toast.error('Error al cargar pisos desde el servidor')
       }
     } catch (error) {
-      toast.error('Error de conexión')
+      toast.error('Error de conexión 3')
       console.error(error)
     } finally {
       setLoading(false)

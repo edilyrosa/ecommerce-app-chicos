@@ -32,10 +32,10 @@ export default function Carrito() {
         setItems(data);
         setFilteredItems(data);
       } else {
-        toast.error('Error al cargar carrito');
+        toast.error('Carrito vacio');
       }
     } catch {
-      toast.error('Error de conexión');
+      toast.error('Error de conexión 7');
     } finally {
       setLoading(false);
     }

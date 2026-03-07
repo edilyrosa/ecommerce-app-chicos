@@ -144,6 +144,11 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                                         Hola, <span className='text-white font-semibold'>{user.nombre}</span>
                                     </span>
 
+                                    <Link href="/perfil" className={getBtnStyle('/perfil')}>
+                                    <User size={18} />
+                                        <span className="text-xs font-bold">Mi Perfil</span>
+                                    </Link>
+
                                     <Link href='/' className={getBtnStyle('/')}>
                                         <ShoppingBag size={18} />
                                         <span className="text-xs font-bold">Tienda</span>
@@ -171,9 +176,9 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                                         <span className="text-xs font-bold">Carrito</span>
                                     </Link>
 
-                                    <Link href='/chat' className={getBtnStyle('/chat')}>
+                                    <Link href='/tracking-pedido' className={getBtnStyle('/tracking-pedido')}>
                                         <MessageCircle size={18} />
-                                        <span className="text-xs font-bold">Chat</span>
+                                        <span className="text-xs font-bold">Tus Pedidos</span>
                                     </Link>
 
                                     <button 

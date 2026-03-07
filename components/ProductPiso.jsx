@@ -164,8 +164,10 @@ export default function ProductPiso({ piso }) {
           </p>
           <div className='flex items-center gap-1 text-[10px] text-yellow-500 font-bold mt-0.5'>
             <Truck size={12} />
-            <span>Envío Express</span>
+            <span>Envío Gratis</span>
           </div>
+          <p className='text-[10px] text-green-700 font-bold mt-0.5'>📦 Entrega de 3 a 5 días hábiles.</p>
+
         </div>
       </div>
     </div>

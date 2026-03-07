@@ -1,3 +1,7 @@
+
+
+
+
 // app/checkout/page.jsx
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -10,6 +14,45 @@ import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 import { CheckCircle } from 'lucide-react';
 
+// Mapeo de códigos de régimen fiscal a descripciones (SAT México)
+const getRegimenDescripcion = (codigo) => {
+  const regimenes = {
+    '601': 'General de Ley Personas Morales',
+    '603': 'Personas Morales con Fines no Lucrativos',
+    '605': 'Sueldos y Salarios e Ingresos Asimilados a Salarios',
+    '606': 'Arrendamiento',
+    '607': 'Régimen de Enajenación o Adquisición de Bienes',
+    '608': 'Demás ingresos',
+    '609': 'Consolidación',
+    '610': 'Residentes en el Extranjero sin Establecimiento Permanente en México',
+    '611': 'Ingresos por Dividendos (socios y accionistas)',
+    '612': 'Personas Físicas con Actividades Empresariales y Profesionales',
+    '614': 'Ingresos por intereses',
+    '615': 'Régimen de los ingresos por obtención de premios',
+    '616': 'Sin obligaciones fiscales',
+    '620': 'Sociedades Cooperativas de Producción',
+    '621': 'Incorporación Fiscal',
+    '622': 'Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras',
+    '623': 'Opcional para Grupos de Sociedades',
+    '624': 'Coordinados',
+    '625': 'Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas',
+    '626': 'Régimen Simplificado de Confianza',
+  };
+  return regimenes[codigo] || 'Régimen no especificado';
+};
+
+// Expresión regular para RFC persona física (4 letras + 6 números + 3 alfanuméricos)
+const validarRFC = (rfc) => {
+  const re = /^[A-Z&Ñ]{4}\d{6}[A-Z0-9]{3}$/;
+  return re.test(rfc);
+};
+
+// Validar teléfono mexicano (10 dígitos, opcional con guiones)
+const validarTelefono = (tel) => {
+  const re = /^\d{10}$|^\d{3}-\d{3}-\d{4}$/;
+  return re.test(tel);
+};
+
 export default function Checkout() {
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -17,10 +60,25 @@ export default function Checkout() {
   const [procesando, setProcesando] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('todas');
-  
+  const [tipoFactura, setTipoFactura] = useState(null); // 'con_factura' o 'sin_factura'
+
+  // --- CAMPOS DE ENTREGA (siempre visibles) ---
+  const [telefonoContacto, setTelefonoContacto] = useState('');
+  const [direccionEntrega, setDireccionEntrega] = useState('');
+  const [direccionGoogle, setDireccionGoogle] = useState(''); // opcional
+
+  // --- CAMPOS FISCALES (solo si se requiere factura) ---
+  const [rfc, setRfc] = useState('');
+  const [domicilioFiscal, setDomicilioFiscal] = useState('');
+  const [ciudad, setCiudad] = useState('');
+  const [estado, setEstado] = useState('');
+  const [codigoPostal, setCodigoPostal] = useState('');
+  const [regimenFiscal, setRegimenFiscal] = useState('616');
+
   const { user, updateCartCount } = useAuth();
   const router = useRouter();
 
+  // Obtener carrito
   const fetchCarrito = useCallback(async () => {
     try {
       const token = Cookies.get('token');
@@ -55,24 +113,22 @@ export default function Checkout() {
     }
   }, [user, fetchCarrito, router]);
 
+  // Filtro por búsqueda
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredItems(items);
       return;
     }
-
     const filtered = items.filter(item => 
       item.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.categoria?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
     setFilteredItems(filtered);
   }, [searchTerm, items]);
 
+  // Eliminar item del carrito
   const eliminarItem = useCallback(async (carritoId) => {
     setItems(prev => prev.filter(i => i.carrito_id !== carritoId));
-    
     try {
       const token = Cookies.get('token');
       await fetch('/api/carrito/eliminar', {
@@ -87,6 +143,7 @@ export default function Checkout() {
     }
   }, [fetchCarrito, updateCartCount]);
 
+  // Ajustar cantidad
   const ajustarCantidad = useCallback(async (carritoId, delta) => {
     setItems(prev => 
       prev.map(i => 
@@ -95,7 +152,6 @@ export default function Checkout() {
           : i
       )
     );
-
     try {
       const token = Cookies.get('token');
       await fetch('/api/carrito/ajustar', {
@@ -109,78 +165,192 @@ export default function Checkout() {
     }
   }, [fetchCarrito, updateCartCount]);
 
-  // ← CALCULAR SUBTOTAL ANTES DE useMemo
+  // Cálculos financieros
   const subtotal = useMemo(() => 
     items.reduce((sum, item) => sum + (Number(item.precio) * item.cantidad), 0), 
     [items]
   );
-  
+  const gastosManiobra = useMemo(() => subtotal * 0.04, [subtotal]);
+  const totalConGastos = useMemo(() => subtotal + gastosManiobra, [subtotal, gastosManiobra]);
+
   const itemsConError = useMemo(() => 
     filteredItems.filter(item => item.cantidad > (item.stock || 0)), 
     [filteredItems]
   );
   const tieneErrores = itemsConError.length > 0;
 
-  // ← FUNCIÓN CORREGIDA
+  // Validaciones
+  const telefonoValido = validarTelefono(telefonoContacto);
+  const rfcValido = validarRFC(rfc);
+
+  const datosEntregaValidos = telefonoValido && direccionEntrega.trim() !== '';
+  const datosFiscalesValidos = tipoFactura !== 'con_factura' || (
+    rfc.trim() !== '' && rfcValido &&
+    domicilioFiscal.trim() !== '' &&
+    ciudad.trim() !== '' &&
+    estado.trim() !== '' &&
+    codigoPostal.trim() !== '' &&
+    regimenFiscal.trim() !== ''
+  );
+
+  const formularioCompleto = 
+    filteredItems.length > 0 &&
+    !tieneErrores &&
+    tipoFactura !== null &&
+    datosEntregaValidos &&
+    datosFiscalesValidos;
+
+  // Función principal de confirmación de pago
   const confirmarPago = async () => {
     setProcesando(true);
     
-    setTimeout(async () => {
+    try {
+      const token = Cookies.get('token');
+      
+      // Generar número de factura si aplica
+      const numeroFactura = tipoFactura === 'con_factura' 
+        ? `FAC-${Date.now().toString().slice(-8)}` 
+        : null;
+
+      // Construir objeto de datos para el pedido (TODOS los campos)
+      const pedidoData = {
+        items: items.map(item => ({
+          id: item.id,
+          nombre: item.nombre,
+          descripcion: item.descripcion || '',
+          cantidad: item.cantidad,
+          precio: Number(item.precio),
+          categoria: item.categoria || ''
+        })),
+        subtotal,
+        gastoManiobra: gastosManiobra,
+        total: totalConGastos,
+        conFactura: tipoFactura === 'con_factura',
+        telefono_contacto: telefonoContacto,
+        direccion_entrega: direccionEntrega,
+        direccion_google: direccionGoogle || null,
+        rfc: tipoFactura === 'con_factura' ? rfc : null,
+        domicilio_fiscal: tipoFactura === 'con_factura' ? domicilioFiscal : null,
+        ciudad: tipoFactura === 'con_factura' ? ciudad : null,
+        estado: tipoFactura === 'con_factura' ? estado : null,
+        codigo_postal: tipoFactura === 'con_factura' ? codigoPostal : null,
+        regimen_fiscal: tipoFactura === 'con_factura' ? regimenFiscal : null,
+        numeroFactura: numeroFactura
+      };
+
+      // 1. Guardar pedido en la base de datos
+      const pedidoRes = await fetch('/api/pedidos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(pedidoData)
+      });
+
+      const pedidoGuardado = await pedidoRes.json();
+
+      //* 2. Enviar email al administrador
       try {
-        const token = Cookies.get('token');
-        const res = await fetch('/api/carrito/vaciar', {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+        await fetch('/api/send-admin-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pedido: {
+              id: pedidoGuardado.pedido.id,
+              items: pedidoData.items,
+              subtotal,
+              gasto_maniobra: gastosManiobra,
+              total: totalConGastos,
+              conFactura: tipoFactura === 'con_factura',
+              telefono_contacto: telefonoContacto,
+              direccion_entrega: direccionEntrega,
+              rfc: tipoFactura === 'con_factura' ? rfc : null,
+              domicilio_fiscal: tipoFactura === 'con_factura' ? domicilioFiscal : null,
+              ciudad: tipoFactura === 'con_factura' ? ciudad : null,
+              estado: tipoFactura === 'con_factura' ? estado : null,
+              codigo_postal: tipoFactura === 'con_factura' ? codigoPostal : null,
+              regimen_fiscal: tipoFactura === 'con_factura' ? regimenFiscal : null,
+              numero_factura: numeroFactura
+            },
+            usuario: {
+              nombre: user?.nombre,
+              email: user?.email
+            }
+          })
         });
-        const data = await res.json();
-
-        if (!res.ok) {
-          toast.error(data.error || 'Error al procesar el pago');
-          fetchCarrito();
-          setProcesando(false);
-          return;
-        }
-
-        // Guardar datos de la factura
-        const facturaData = {
-          numeroFactura: `FAC-${Date.now().toString().slice(-8)}`,
-          fecha: new Date().toLocaleDateString('es-MX', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          }),
-          hora: new Date().toLocaleTimeString('es-MX', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          usuario: {
-            nombre: user.nombre,
-            email: user.email
-          },
-          items: items.map(item => ({
-            nombre: item.nombre,
-            descripcion: item.descripcion || '',
-            cantidad: item.cantidad,
-            precio: item.precio
-          })),
-          subtotal: subtotal,
-          iva: subtotal * 0.16,
-          total: subtotal * 1.16
-        };
-
-        localStorage.setItem('facturaData', JSON.stringify(facturaData));
-
-        toast.success('¡Compra exitosa!', { icon: '🎉', duration: 3000 });
-        setItems([]);
-        updateCartCount();
-        
-        setTimeout(() => router.push('/factura'), 1500);
-      } catch {
-        toast.error('Error de conexión');
-      } finally {
-        setProcesando(false);
+      } catch (emailError) {
+        console.error('Error enviando email:', emailError);
+        // No detenemos el flujo si falla el email
       }
-    }, 2000);
+
+      if (!pedidoRes.ok) {
+        const errorData = await pedidoRes.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al registrar el pedido');
+      }
+
+
+      const facturaData = {
+        numeroFactura,
+        fecha: new Date().toLocaleDateString('es-MX', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }),
+        hora: new Date().toLocaleTimeString('es-MX', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        usuario: {
+          nombre: user?.nombre || 'N/A',
+          email: user?.email || 'N/A'
+        },
+        telefono_contacto: telefonoContacto,
+        direccion_entrega: direccionEntrega,
+        direccion_google: direccionGoogle || null,
+        conFactura: tipoFactura === 'con_factura', // <-- AGREGADO
+        datos_fiscales: tipoFactura === 'con_factura' ? {
+          rfc,
+          domicilio_fiscal: domicilioFiscal,
+          ciudad,
+          estado,
+          codigo_postal: codigoPostal,
+          regimen_fiscal: regimenFiscal
+        } : null,
+        items: pedidoData.items,
+        subtotal,
+        gastos_maniobra: gastosManiobra,
+        total: totalConGastos
+      };
+
+
+      localStorage.setItem('facturaData', JSON.stringify(facturaData));
+
+      // 3. Vaciar carrito
+      const vaciarRes = await fetch('/api/carrito/vaciar', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!vaciarRes.ok) {
+        const errorData = await vaciarRes.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al vaciar el carrito');
+      }
+
+      // Todo bien
+      toast.success('¡Compra exitosa!', { icon: '🎉', duration: 3000 });
+      setItems([]);
+      updateCartCount();
+      
+      // Redirigir a factura
+      setTimeout(() => router.push('/factura'), 1500);
+      
+    } catch (error) {
+      console.error('Error en confirmarPago:', error);
+      toast.error(error.message || 'Error al procesar la compra');
+    } finally {
+      setProcesando(false);
+    }
   };
 
   if (loading) {
@@ -194,7 +364,6 @@ export default function Checkout() {
         />
         <main className="flex-1 container mx-auto px-3 md:px-6 py-4 md:py-8">
           <div className="h-8 md:h-10 w-48 md:w-64 bg-gradient-to-r from-blue-100 to-yellow-100 rounded-lg animate-pulse mb-6 md:mb-8" />
-          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             <div className="lg:col-span-2 space-y-4">
               {[...Array(3)].map((_, i) => (
@@ -252,7 +421,6 @@ export default function Checkout() {
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 md:mb-0" style={{ color: '#00162f' }}>
             Finalizar Compra
           </h1>
-          
           {searchTerm && (
             <p className="text-xs md:text-sm text-gray-600 font-medium">
               {filteredItems.length} de {items.length} producto{items.length !== 1 ? 's' : ''}
@@ -290,49 +458,224 @@ export default function Checkout() {
             <div className="lg:col-span-1">
               <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl sticky top-24 border" style={{ borderColor: '#00162f20' }}>
                 <h2 className="text-lg md:text-xl font-black mb-4 md:mb-6" style={{ color: '#00162f' }}>
-                  {searchTerm ? 'Total Filtrado' : 'Resumen de Pago'}
+                  {searchTerm ? 'Total Filtrado' : 'Detalles de Pago'}
                 </h2>
-                
+
+                {/* CLIENTE (solo datos básicos) */}
+                <div className="mb-6 pb-6 border-b border-dashed" style={{ borderColor: '#00162f20' }}>
+                  <h3 className="text-sm md:text-base font-bold mb-3" style={{ color: '#00162f' }}>Cliente</h3>
+                  <div className="space-y-1 text-xs md:text-sm">
+                    <p className="font-bold text-base md:text-lg" style={{ color: '#00162f' }}>
+                      {user?.nombre || 'Nombre no disponible'}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Email:</span> {user?.email || 'Email no disponible'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* DATOS DE ENTREGA (siempre) */}
+                <div className="mb-6 pb-6 border-b border-dashed" style={{ borderColor: '#00162f20' }}>
+                  <h3 className="text-sm md:text-base font-bold mb-3" style={{ color: '#00162f' }}>Datos de entrega</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Teléfono de contacto *</label>
+                      <input
+                        type="tel"
+                        value={telefonoContacto}
+                        onChange={(e) => setTelefonoContacto(e.target.value)}
+                        placeholder="3121234567 o 312-123-4567"
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 ${
+                          telefonoContacto && !telefonoValido ? 'border-red-400' : 'border-gray-200'
+                        }`}
+                        style={{ '--tw-ring-color': '#fbbf24' }}
+                        required
+                      />
+                      {telefonoContacto && !telefonoValido && (
+                        <span className="text-xs text-red-500 mt-1 block">
+                          Teléfono inválido (10 dígitos, opcional guiones)
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Dirección de entrega *</label>
+                      <input
+                        type="text"
+                        value={direccionEntrega}
+                        onChange={(e) => setDireccionEntrega(e.target.value)}
+                        placeholder="Calle, número, colonia, ciudad, estado, CP"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2"
+                        style={{ '--tw-ring-color': '#fbbf24' }}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Referencia Google Maps (opcional)</label>
+                      <input
+                        type="text"
+                        value={direccionGoogle}
+                        onChange={(e) => setDireccionGoogle(e.target.value)}
+                        placeholder="Pega aquí la dirección de Google Maps o coordenadas"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2"
+                        style={{ '--tw-ring-color': '#fbbf24' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SUBTOTAL Y GASTOS */}
                 <div className="space-y-3 md:space-y-4 border-b border-dashed pb-4 md:pb-6 mb-4 md:mb-6" style={{ borderColor: '#00162f20' }}>
                   <div className="flex justify-between text-sm md:text-base text-gray-600 font-medium">
                     <span>Subtotal:</span>
                     <span className="font-bold">${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm md:text-base text-gray-600 font-medium">
-                    <span>IVA (16%):</span>
-                    <span className="font-bold">${(subtotal * 0.16).toFixed(2)}</span>
+                    <span>Gastos de Maniobra (4%):</span>
+                    <span className="font-bold">${gastosManiobra.toFixed(2)}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between text-2xl md:text-3xl font-black mb-6 md:mb-8" style={{ color: '#00162f' }}>
                   <span>Total:</span>
                   <span style={{ color: '#fbbf24' }}>
-                    ${(subtotal * 1.16).toFixed(2)}
+                    ${totalConGastos.toFixed(2)}
                   </span>
                 </div>
 
-                {searchTerm && items.length !== filteredItems.length && (
-                  <div className="mb-4 p-3 rounded-lg border-2" style={{ backgroundColor: '#fef3c720', borderColor: '#fbbf2450' }}>
-                    <p className="text-[10px] md:text-xs font-bold" style={{ color: '#00162f' }}>
-                      ⚠️ Mostrando solo productos filtrados.
-                      <button 
-                        onClick={() => setSearchTerm('')}
-                        className="underline ml-1 hover:opacity-80"
-                        style={{ color: '#fbbf24' }}
-                      >
-                        Ver todos
-                      </button>
-                    </p>
+                {/* TIPO DE COMPROBANTE */}
+                <div className="mb-6 space-y-3">
+                  <h3 className="text-sm md:text-base font-bold" style={{ color: '#00162f' }}>Tipo de comprobante</h3>
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 text-sm md:text-base cursor-pointer">
+                      <input
+                        type="radio"
+                        name="tipoFactura"
+                        value="sin_factura"
+                        checked={tipoFactura === 'sin_factura'}
+                        onChange={(e) => setTipoFactura(e.target.value)}
+                        className="w-4 h-4 accent-yellow-400"
+                      />
+                      <span>Sin Factura Fiscal</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-sm md:text-base cursor-pointer">
+                      <input
+                        type="radio"
+                        name="tipoFactura"
+                        value="con_factura"
+                        checked={tipoFactura === 'con_factura'}
+                        onChange={(e) => setTipoFactura(e.target.value)}
+                        className="w-4 h-4 accent-yellow-400"
+                      />
+                      <span>Con Factura Fiscal</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* FORMULARIO DE DATOS FISCALES (solo si eligió factura) */}
+                {tipoFactura === 'con_factura' && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-xl border-2" style={{ borderColor: '#00162f20' }}>
+                    <h3 className="text-sm md:text-base font-bold mb-4" style={{ color: '#00162f' }}>Datos para factura</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">RFC *</label>
+                        <input
+                          type="text"
+                          value={rfc}
+                          onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                          maxLength={13}
+                          placeholder="XAXX010101000"
+                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 ${
+                            rfc && !rfcValido ? 'border-red-400' : 'border-gray-200'
+                          }`}
+                          style={{ '--tw-ring-color': '#fbbf24' }}
+                          required
+                        />
+                        {rfc && !rfcValido && (
+                          <span className="text-xs text-red-500 mt-1 block">
+                            Formato: 4 letras + 6 números + 3 dígitos/letras
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Domicilio Fiscal *</label>
+                        <input
+                          type="text"
+                          value={domicilioFiscal}
+                          onChange={(e) => setDomicilioFiscal(e.target.value)}
+                          placeholder="Calle, número, colonia"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2"
+                          style={{ '--tw-ring-color': '#fbbf24' }}
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Ciudad *</label>
+                          <input
+                            type="text"
+                            value={ciudad}
+                            onChange={(e) => setCiudad(e.target.value)}
+                            placeholder="Colima"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2"
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Estado *</label>
+                          <select
+                            value={estado}
+                            onChange={(e) => setEstado(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2"
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                            required
+                          >
+                            <option value="">Selecciona</option>
+                            <option value="Colima">Colima</option>
+                            <option value="Jalisco">Jalisco</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Código Postal *</label>
+                          <input
+                            type="text"
+                            value={codigoPostal}
+                            onChange={(e) => setCodigoPostal(e.target.value)}
+                            maxLength={5}
+                            placeholder="28050"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2"
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Régimen Fiscal *</label>
+                        <select
+                          value={regimenFiscal}
+                          onChange={(e) => setRegimenFiscal(e.target.value)}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2"
+                          style={{ '--tw-ring-color': '#fbbf24' }}
+                          required
+                        >
+                          <option value="616">616 - Sin obligaciones fiscales</option>
+                          <option value="612">612 - Personas Físicas con Actividades Empresariales</option>
+                          <option value="605">605 - Sueldos y Salarios</option>
+                          <option value="606">606 - Arrendamiento</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 )}
 
+                {/* BOTÓN DE CONFIRMAR */}
                 <button
                   onClick={confirmarPago}
-                  disabled={procesando || filteredItems.length === 0 || tieneErrores}
+                  disabled={procesando || !formularioCompleto}
                   className="w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-base md:text-lg transition-all shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3"
                   style={{
-                    backgroundColor: procesando || tieneErrores ? '#e5e7eb' : '#fbbf24',
-                    color: procesando || tieneErrores ? '#9ca3af' : '#00162f'
+                    backgroundColor: procesando || !formularioCompleto ? '#e5e7eb' : '#fbbf24',
+                    color: procesando || !formularioCompleto ? '#9ca3af' : '#00162f'
                   }}
                 >
                   {procesando ? (

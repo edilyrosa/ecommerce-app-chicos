@@ -315,23 +315,35 @@ export default function ProductCard({ producto, onClick, isZoomed, onClose }) {
                 </div>
 
                 {/* Precios y Envío */}
-                <div className='flex flex-col pt-1'>
-                    <div className='flex items-baseline gap-2'>
-                        <span className='text-base md:text-lg font-black text-gray-900'>
-                            ${Number(producto.precio).toLocaleString()}
-                        </span>
-                        {producto.precio_anterior && (
-                            <span className='text-[10px] md:text-xs text-gray-400 line-through'>
-                                ${Number(producto.precio_anterior).toLocaleString()}
+
+                <div className='flex flex-col md:flex-row md:gap-2'>
+
+                    <div className='flex flex-col pt-1'>
+                        <div className='flex items-baseline gap-2'>
+                            <span className='text-base md:text-lg font-black text-gray-900'>
+                                ${Number(producto.precio).toLocaleString()}
                             </span>
-                        )}
+                            {producto.precio_anterior && (
+                                <span className='text-[10px] md:text-xs text-gray-400 line-through'>
+                                    ${Number(producto.precio_anterior).toLocaleString()}
+                                </span>
+                            )}
+                        </div>
+                            <span className='text-[10px] font-black text-gray-900 bg-yellow-200 w-[50%] md:w-[100%]'>IVA incluido</span>
+                        
+
                     </div>
-                    
-                    <div className='flex items-center gap-1 text-[10px] text-green-600 font-bold mt-0.5'>
-                        <Truck size={12} />
-                        <span>Envío Express</span>
-                    </div>
+
                 </div>
+
+              
+                    <div className='flex items-center gap-1 text-[10px] text-green-600 font-bold mt-0.5'>
+                            <Truck size={12} />
+                            <span>Envío Gratis.</span>
+                    </div>
+                    <p  className='text-[10px] text-green-700 font-bold mt-0.5'>📦 Entrega de 3 a 5 días hábiles.</p>
+               
+                
             </div>
 
             {/* Botón favoritos (comentado) */}

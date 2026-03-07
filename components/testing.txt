@@ -123,3 +123,17 @@
   }
 
 `}</style>
+
+
+
+
+       {/* <div className="space-y-3 md:space-y-4 border-b border-dashed pb-4 md:pb-6 mb-4 md:mb-6" style={{ borderColor: '#00162f20' }}>
+                  <div className="flex justify-between text-sm md:text-base text-gray-600 font-medium">
+                    <span>Subtotal:</span>
+                    <span className="font-bold">${subtotal.toFixed(2)}</span>
+                  </div>
+                   <div className="flex justify-between text-sm md:text-base text-gray-600 font-medium">
+                    <span>IVA (16%):</span>
+                    <span className="font-bold">${(subtotal * 0.16).toFixed(2)}</span>
+                  </div> 
+                </div> */}

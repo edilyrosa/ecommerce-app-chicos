@@ -165,6 +165,7 @@ export default function PromoBanner() {
                             : 'bg-white/40 w-2 hover:bg-white/60'
                         }`}
                         aria-label={`Ir al slide ${index + 1}`}
+                        suppressHydrationWarning
                     />
                 ))}
             </div>

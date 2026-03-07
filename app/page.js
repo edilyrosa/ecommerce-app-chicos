@@ -27,7 +27,7 @@ export default function Home1() {
         toast.error('Error al cargar los productos')
       }
     } catch (error) {
-      toast.error('Error de conexión')
+      toast.error('Error de conexión 8')
     } finally {
       setLoading(false)
     }

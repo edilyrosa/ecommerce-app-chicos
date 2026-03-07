@@ -1,9 +1,10 @@
 // components/FacturaContent.jsx
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, Download, FileDown, AlertCircle, Smartphone } from 'lucide-react';
+import { ShoppingCart, Download, FileDown, AlertCircle, Smartphone, Package } from 'lucide-react';
 
 export default function FacturaContent() {
   const router = useRouter();
@@ -14,7 +15,6 @@ export default function FacturaContent() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Detectar si es móvil
     const checkMobile = () => {
       const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(mobile);
@@ -24,7 +24,15 @@ export default function FacturaContent() {
     try {
       const data = localStorage.getItem('facturaData');
       if (data) {
-        setFacturaData(JSON.parse(data));
+        const parsed = JSON.parse(data);
+        // Asegurar que tengamos un campo booleano conFactura (aceptamos tanto camelCase como snake_case)
+        if (parsed.conFactura === undefined && parsed.con_factura !== undefined) {
+          parsed.conFactura = parsed.con_factura;
+        } else if (parsed.conFactura === undefined) {
+          // Si no viene ningún campo, lo inferimos de la presencia de datos_fiscales o numeroFactura
+          parsed.conFactura = !!(parsed.datos_fiscales || parsed.numeroFactura);
+        }
+        setFacturaData(parsed);
       } else {
         router.push('/');
       }
@@ -36,7 +44,6 @@ export default function FacturaContent() {
 
   const generarPDF = async () => {
     if (!facturaData) return;
-
     setGenerandoPDF(true);
     setError(null);
 
@@ -44,7 +51,6 @@ export default function FacturaContent() {
       const elemento = document.getElementById('factura-contenido');
       if (!elemento) throw new Error('No se encontró el elemento');
 
-      // ESTRATEGIA PARA MÓVILES: Usar html2pdf.js
       if (isMobile) {
         try {
           const html2pdf = (await import('html2pdf.js')).default;
@@ -80,9 +86,7 @@ export default function FacturaContent() {
           }
           throw new Error('Usa el botón Imprimir para guardar como PDF');
         }
-      } 
-      // ESTRATEGIA PARA DESKTOP: jspdf + html2canvas
-      else {
+      } else {
         const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
           import('jspdf'),
           import('html2canvas')
@@ -136,14 +140,6 @@ export default function FacturaContent() {
     window.print();
   };
 
-  if (!facturaData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400" />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -170,50 +166,175 @@ export default function FacturaContent() {
     );
   }
 
-  const { fecha, hora, usuario, items, subtotal, iva, total, numeroFactura } = facturaData;
+  // Skeleton mientras carga
+  if (!facturaData) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-3 md:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto bg-white shadow-xl border-2 border-gray-300 p-4 md:p-6 animate-pulse">
+          {/* Header skeleton */}
+          <div className="border-b-4 border-blue-900 pb-6 mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-300 rounded"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-48 bg-gray-300 rounded"></div>
+                    <div className="h-3 w-32 bg-gray-300 rounded"></div>
+                    <div className="h-3 w-32 bg-gray-300 rounded"></div>
+                    <div className="h-3 w-40 bg-gray-300 rounded"></div>
+                  </div>
+                </div>
+                <div className="h-3 w-24 bg-gray-300 rounded mt-2"></div>
+                <div className="h-3 w-40 bg-gray-300 rounded mt-1"></div>
+              </div>
+              <div className="text-right">
+                <div className="h-8 w-24 bg-gray-300 rounded mb-2"></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-4 w-12 bg-gray-300 rounded"></div>
+                  <div className="h-4 w-12 bg-gray-300 rounded"></div>
+                  <div className="h-4 w-20 bg-gray-300 rounded"></div>
+                  <div className="h-4 w-20 bg-gray-300 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Cliente skeleton */}
+          <div className="border-b-2 border-gray-300 pb-4 mb-4">
+            <div className="h-5 w-16 bg-gray-300 rounded mb-3"></div>
+            <div className="h-4 w-48 bg-gray-300 rounded mb-2"></div>
+            <div className="h-3 w-64 bg-gray-300 rounded mb-1"></div>
+            <div className="h-3 w-56 bg-gray-300 rounded mb-1"></div>
+            <div className="h-3 w-40 bg-gray-300 rounded"></div>
+          </div>
+
+          {/* Tabla skeleton */}
+          <div className="mb-4">
+            <div className="grid grid-cols-12 gap-2 bg-gray-300 h-8 rounded mb-2"></div>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="grid grid-cols-12 gap-2 py-2 border-b border-gray-200">
+                <div className="col-span-2 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-4 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-1 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-1 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-2 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-2 h-4 bg-gray-300 rounded"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Totales skeleton */}
+          <div className="border-t-2 border-gray-300 pt-4">
+            <div className="max-w-md ml-auto space-y-2">
+              <div className="flex justify-between">
+                <div className="h-4 w-16 bg-gray-300 rounded"></div>
+                <div className="h-4 w-20 bg-gray-300 rounded"></div>
+              </div>
+              <div className="flex justify-between">
+                <div className="h-4 w-24 bg-gray-300 rounded"></div>
+                <div className="h-4 w-20 bg-gray-300 rounded"></div>
+              </div>
+              <div className="flex justify-between pt-2 border-t-2 border-gray-300">
+                <div className="h-6 w-20 bg-gray-300 rounded"></div>
+                <div className="h-6 w-28 bg-gray-300 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Datos de la factura
+  const { fecha, hora, usuario, items, numeroFactura, conFactura = false } = facturaData;
+
+  // Calcular valores según tipo
+  let subtotalSinIva = 0;
+  let iva = 0;
+  let subtotalConIva = 0;
+
+  const itemsProcesados = items.map(item => {
+    const precioConIva = Number(item.precio);
+    const precioSinIva = conFactura ? precioConIva / 1.16 : precioConIva;
+    const cantidad = item.cantidad;
+    const importeConIva = precioConIva * cantidad;
+    const importeSinIva = precioSinIva * cantidad;
+
+    if (conFactura) {
+      subtotalSinIva += importeSinIva;
+      subtotalConIva += importeConIva;
+    } else {
+      subtotalConIva += importeConIva;
+    }
+
+    return {
+      ...item,
+      precioConIva,
+      precioSinIva,
+      importeConIva,
+      importeSinIva
+    };
+  });
+
+  if (conFactura) {
+    iva = subtotalSinIva * 0.16;
+  }
+  const gastoManiobra = subtotalConIva * 0.04;
+  const total = subtotalConIva + gastoManiobra;
 
   return (
     <>
-      {/* Botones de acción - Responsivos */}
-      <div className="no-print fixed top-3 md:top-4 right-3 md:right-4 z-50 flex flex-col md:flex-row gap-2">
-        <button
-          onClick={() => router.push('/')}
-          className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm shadow-lg hover:opacity-90 whitespace-nowrap"
-          style={{ backgroundColor: '#00162f', color: 'white' }}
-        >
-          Inicio
-        </button>
-        <button
-          onClick={imprimirFactura}
-          className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm shadow-lg bg-gray-600 text-white flex items-center justify-center gap-1.5 md:gap-2 whitespace-nowrap"
-        >
-          <FileDown size={16} className="md:w-[18px] md:h-[18px]" />
-          Imprimir
-        </button>
-        <button
-          onClick={generarPDF}
-          disabled={generandoPDF}
-          className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm shadow-lg hover:opacity-90 flex items-center justify-center gap-1.5 md:gap-2 disabled:opacity-50 whitespace-nowrap"
-          style={{ backgroundColor: '#fbbf24', color: '#00162f' }}
-        >
-          {generandoPDF ? (
-            <>
-              <div className="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#00162f' }} />
-              <span className="hidden md:inline">Generando...</span>
-              <span className="md:hidden">...</span>
-            </>
-          ) : (
-            <>
-              <Download size={16} className="md:w-[18px] md:h-[18px]" />
-              PDF
-            </>
-          )}
-        </button>
+      {/* Barra de botones centrada con fondo blanco */}
+      <div className="no-print sticky top-0 z-50 bg-white shadow-md py-2 px-4 mb-4">
+        <div className="flex justify-center gap-2 md:gap-4">
+          <button
+            onClick={() => router.push('/tracking-pedido')}
+            className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm shadow-lg hover:opacity-90 flex items-center gap-1"
+            style={{ backgroundColor: '#00162f', color: 'white' }}
+          >
+            <Package size={16} className="md:w-[18px] md:h-[18px]" />
+            Tracking
+          </button>
+          <button
+            onClick={() => router.push('/')}
+            className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm shadow-lg hover:opacity-90 flex items-center gap-1"
+            style={{ backgroundColor: '#00162f', color: 'white' }}
+          >
+            <ShoppingCart size={16} className="md:w-4 md:h-4" />
+            Inicio
+          </button>
+          <button
+            onClick={imprimirFactura}
+            className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm shadow-lg bg-gray-600 text-white flex items-center gap-1.5 md:gap-2"
+          >
+            <FileDown size={16} className="md:w-[18px] md:h-[18px]" />
+            Imprimir
+          </button>
+          <button
+            onClick={generarPDF}
+            disabled={generandoPDF}
+            className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm shadow-lg hover:opacity-90 flex items-center gap-1.5 md:gap-2 disabled:opacity-50"
+            style={{ backgroundColor: '#fbbf24', color: '#00162f' }}
+          >
+            {generandoPDF ? (
+              <>
+                <div className="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#00162f' }} />
+                <span className="hidden md:inline">Generando...</span>
+                <span className="md:hidden">...</span>
+              </>
+            ) : (
+              <>
+                <Download size={16} className="md:w-[18px] md:h-[18px]" />
+                PDF
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Aviso para móviles */}
       {isMobile && (
-        <div className="no-print bg-blue-50 border-l-4 border-blue-400 p-3 mx-3 mt-16 mb-3 rounded">
+        <div className="no-print bg-blue-50 border-l-4 border-blue-400 p-3 mx-3 mb-3 rounded">
           <div className="flex items-start gap-2">
             <Smartphone size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
@@ -226,209 +347,238 @@ export default function FacturaContent() {
         </div>
       )}
 
-      {/* Contenido de la factura - RESPONSIVO Y MEJORADO */}
+      {/* Documento (factura o nota) */}
       <div className="min-h-screen bg-gray-50 p-3 md:p-6 lg:p-8">
         <div 
           id="factura-contenido" 
           ref={facturaRef}
-          className="max-w-4xl mx-auto bg-white shadow-xl md:shadow-2xl rounded-xl md:rounded-2xl overflow-hidden"
+          className="max-w-4xl mx-auto bg-white shadow-xl border-2 border-gray-300"
+          style={{ fontFamily: 'Arial, sans-serif' }}
         >
-          {/* Header con éxito */}
-          <div className="relative overflow-hidden" style={{ backgroundColor: '#00162f' }}>
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 w-32 h-32 md:w-64 md:h-64 rounded-full bg-yellow-400 blur-2xl md:blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 md:w-64 md:h-64 rounded-full bg-yellow-400 blur-2xl md:blur-3xl" />
-            </div>
-            <div className="relative text-center py-6 md:py-8 px-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-green-500 mb-3 md:mb-4">
-                <CheckCircle size={24} className="text-white md:w-8 md:h-8" />
-              </div>
-              <h1 className="text-xl md:text-3xl font-black text-white mb-1 md:mb-2">
-                ¡Compra Exitosa!
-              </h1>
-              <p className="text-xs md:text-base text-yellow-400 font-medium">
-                Tu pedido ha sido procesado correctamente
-              </p>
-            </div>
-          </div>
-
-          {/* Información de la empresa */}
-          <div className="border-b-4 p-5 md:p-6 lg:p-8" style={{ borderColor: '#fbbf24' }}>
+          {/* HEADER - Emisor y título */}
+          <div className="border-b-4 border-blue-900 p-4 md:p-6">
             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-              <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
-                <div className="w-12 h-12 md:w-16 lg:w-20 md:h-16 lg:h-20 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#00162f' }}>
+              <div className="flex-1">
+                <div className="flex items-start gap-3 mb-3">
                   <img 
-                    src="/logo.png" 
+                    src="/bodega-img.jpg" 
                     alt="Logo" 
-                    className="w-10 h-10 md:w-14 lg:w-18 md:h-14 lg:h-18 object-contain"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<span class="text-white font-black text-lg md:text-xl">BA</span>';
-                    }}
+                    className="w-12 h-12 md:w-16 md:h-16 object-contain"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
+                  <div>
+                    <h2 className="text-sm md:text-base font-black text-gray-800 leading-tight">
+                      BODEGA DE AZULEJOS
+                    </h2>
+                    <p className="text-xs text-gray-600">TORRES QUINTERO 357</p>
+                    <p className="text-xs text-gray-600">FATIMA</p>
+                    <p className="text-xs text-gray-600">COLIMA, COLIMA CP: 28050</p>
+                    <p className="text-xs text-gray-600 font-bold">RFC: BAZA123456XXX</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-base md:text-xl lg:text-2xl font-black tracking-wider leading-tight" style={{ color: '#00162f' }}>
-                    BODEGA DE AZULEJOS
-                  </h2>
-                  <p className="text-xs md:text-sm text-gray-600 font-medium mt-1">
-                    RFC: BDA123456ABC
-                  </p>
-                  <p className="text-xs md:text-sm text-gray-600">
-                    Av. Principal #123, Ciudad
-                  </p>
-                </div>
-              </div>
-
-              <div className="text-left md:text-right w-full md:w-auto">
-                <div className="inline-block px-3 py-1.5 md:px-4 md:py-2 rounded-lg mb-2" style={{ backgroundColor: '#fbbf2420' }}>
-                  <p className="text-xs text-gray-600 font-bold uppercase">Factura</p>
-                  <p className="text-base md:text-xl font-black" style={{ color: '#00162f' }}>
-                    #{numeroFactura}
-                  </p>
-                </div>
-                <p className="text-xs md:text-sm text-gray-600 font-medium">
-                  <span className="font-bold">Fecha:</span> {fecha}
+                <p className="text-xs text-gray-600">
+                  <span className="font-bold">Domicilio fiscal:</span> 28050
                 </p>
-                <p className="text-xs md:text-sm text-gray-600 font-medium">
-                  <span className="font-bold">Hora:</span> {hora}
+                <p className="text-xs text-gray-600">
+                  <span className="font-bold">Régimen fiscal:</span> 612/Personas Físicas con Actividades Empresariales
                 </p>
               </div>
-            </div>
-          </div>
 
-          {/* Cliente */}
-          <div className="p-5 md:p-6 lg:p-8 bg-gray-50">
-            <h3 className="text-xs md:text-base font-black uppercase tracking-wider mb-3 md:mb-4" style={{ color: '#00162f' }}>
-              DATOS DEL CLIENTE
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <div>
-                <p className="text-[10px] md:text-xs text-gray-500 font-bold mb-1">Nombre</p>
-                <p className="text-xs md:text-base font-bold text-gray-800 break-words">{usuario.nombre}</p>
-              </div>
-              <div>
-                <p className="text-[10px] md:text-xs text-gray-500 font-bold mb-1">Correo Electrónico</p>
-                <p className="text-xs md:text-base font-bold text-gray-800 break-all">{usuario.email}</p>
+              <div className="text-right">
+                <div className="bg-blue-900 text-white px-4 py-2 mb-2">
+                  <h1 className="text-lg md:text-xl font-black">
+                    {conFactura ? 'Factura' : 'Nota de Remisión'}
+                  </h1>
+                </div>
+                <div className="bg-blue-900 text-white px-4 py-2 grid grid-cols-2 gap-2 text-xs">
+                  <div className="text-left font-bold">Fecha</div>
+                  <div className="text-right font-bold">Folio</div>
+                  <div className="text-left">{fecha} {hora}</div>
+                  <div className="text-right">{numeroFactura}</div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Productos */}
-          <div className="p-5 md:p-6 lg:p-8">
-            <h3 className="text-xs md:text-base font-black uppercase tracking-wider mb-3 md:mb-4" style={{ color: '#00162f' }}>
-              DETALLE DE PRODUCTOS
-            </h3>
-
-            {/* Header de productos - Solo desktop */}
-            <div className="hidden md:grid grid-cols-12 gap-4 pb-3 mb-3 border-b-2 text-xs font-black uppercase" style={{ borderColor: '#fbbf24', color: '#00162f' }}>
-              <div className="col-span-5">PRODUCTO</div>
-              <div className="col-span-2 text-center">CANTIDAD</div>
-              <div className="col-span-2 text-right">PRECIO UNIT.</div>
-              <div className="col-span-3 text-right">SUBTOTAL</div>
+          {/* CLIENTE */}
+          {/* <div className="border-b-2 border-gray-300 p-4 md:p-6">
+            <div className="bg-blue-900 text-white px-3 py-1 mb-3 inline-block">
+              <h3 className="text-xs md:text-sm font-black">Cliente</h3>
             </div>
+            <p className="font-black text-sm md:text-base text-gray-800 mb-2">
+              {usuario.nombre}
+            </p>
+            {conFactura ? (
+              <>
+                {usuario.domicilio_fiscal && (
+                  <p className="text-xs text-gray-600">{usuario.domicilio_fiscal}</p>
+                )}
+                {usuario.ciudad && usuario.estado && (
+                  <p className="text-xs text-gray-600">
+                    {usuario.ciudad}, {usuario.estado} CP: {usuario.codigo_postal}
+                  </p>
+                )}
+                {usuario.rfc && (
+                  <p className="text-xs text-gray-600 font-bold">RFC: {usuario.rfc}</p>
+                )}
+                {usuario.regimen_fiscal && (
+                  <p className="text-xs text-gray-600">
+                    <span className="font-bold">Régimen fiscal:</span> {usuario.regimen_fiscal}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-600">Cliente sin factura fiscal</p>
+                <p className="text-xs text-gray-600">Email: {usuario.email}</p>
+              </>
+            )}
+          </div> */}
 
-            {/* Items */}
-          {/* Productos */}
-<div className="p-5 md:p-6 lg:p-8">
-  <h3 className="text-xs md:text-base font-black uppercase tracking-wider mb-3 md:mb-4" style={{ color: '#00162f' }}>
-    DETALLE DE PRODUCTOS
-  </h3>
-
-  {/* Header de productos - Solo desktop */}
-  <div className="hidden md:grid grid-cols-12 gap-4 pb-3 mb-3 border-b-2 text-xs font-black uppercase" style={{ borderColor: '#fbbf24', color: '#00162f' }}>
-    <div className="col-span-5">PRODUCTO</div>
-    <div className="col-span-2 text-center">CANTIDAD</div>
-    <div className="col-span-2 text-right">PRECIO UNIT.</div>
-    <div className="col-span-3 text-right">SUBTOTAL</div>
-  </div>
-
-  {/* Items - AQUÍ EMPIEZA LO QUE DEBES REEMPLAZAR */}
-  <div className="space-y-3 md:space-y-0">
-    {items.map((item, index) => (
-      <div key={index} className="border-b border-gray-200 py-3 last:border-0">
-        {/* Versión móvil */}
-        <div className="block md:hidden">
-          <p className="font-black text-xs mb-1.5 leading-tight" style={{ color: '#00162f' }}>
-            {item.nombre}
-          </p>
-          {item.descripcion && (
-            <p className="text-[10px] text-gray-500 mb-2 leading-relaxed">{item.descripcion}</p>
-          )}
-          <div className="flex justify-between items-center text-[10px] mb-2 bg-gray-50 rounded-lg p-2">
-            <div>
-              <span className="text-gray-600 font-medium">Cantidad: </span>
-              <span className="font-black" style={{ color: '#00162f' }}>{item.cantidad}</span>
+          {/* C//* LIENTE */}
+          <div className="border-b-2 border-gray-300 p-4 md:p-6">
+            <div className="bg-blue-900 text-white px-3 py-1 mb-3 inline-block">
+              <h3 className="text-xs md:text-sm font-black">Cliente</h3>
             </div>
-            <div>
-              <span className="text-gray-600 font-medium">Precio: </span>
-              <span className="font-black" style={{ color: '#00162f' }}>${Number(item.precio).toFixed(2)}</span>
-            </div>
-          </div>
-          <div className="flex justify-between items-center pt-2">
-            <span className="text-[10px] font-bold text-gray-600 uppercase">Subtotal:</span>
-            <span className="text-sm font-black" style={{ color: '#00162f' }}>
-              ${(Number(item.precio) * item.cantidad).toFixed(2)}
-            </span>
-          </div>
-        </div>
-
-        {/* Versión desktop */}
-        <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-          <div className="col-span-5">
-            <p className="font-bold text-sm text-gray-800 leading-tight">{item.nombre}</p>
-            {item.descripcion && (
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">{item.descripcion}</p>
+            <p className="font-black text-sm md:text-base text-gray-800 mb-2">
+              {usuario.nombre}
+            </p>
+            {conFactura && facturaData.datos_fiscales ? (
+              <>
+                <p className="text-xs text-gray-600">{facturaData.datos_fiscales.domicilio_fiscal}</p>
+                <p className="text-xs text-gray-600">
+                  {facturaData.datos_fiscales.ciudad}, {facturaData.datos_fiscales.estado} CP: {facturaData.datos_fiscales.codigo_postal}
+                </p>
+                <p className="text-xs text-gray-600 font-bold">RFC: {facturaData.datos_fiscales.rfc}</p>
+                <p className="text-xs text-gray-600">
+                  <span className="font-bold">Régimen fiscal:</span> {facturaData.datos_fiscales.regimen_fiscal}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-600">Cliente sin factura fiscal</p>
+                <p className="text-xs text-gray-600">Email: {usuario.email}</p>
+              </>
             )}
           </div>
-          <div className="col-span-2 text-center">
-            <span className="inline-block px-3 py-1 rounded-lg font-bold text-sm" style={{ backgroundColor: '#fbbf2420', color: '#00162f' }}>
-              {item.cantidad}
-            </span>
-          </div>
-          <div className="col-span-2 text-right font-bold text-sm text-gray-800">
-            ${Number(item.precio).toFixed(2)}
-          </div>
-          <div className="col-span-3 text-right font-black text-base" style={{ color: '#00162f' }}>
-            ${(Number(item.precio) * item.cantidad).toFixed(2)}
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-  {/* AQUÍ TERMINA LO QUE REEMPLAZASTE */}
-</div>
+
+
+
+          {/* TABLA DE PRODUCTOS */}
+          <div className="p-4 md:p-6">
+            <div className="grid grid-cols-12 gap-2 bg-blue-900 text-white p-2 text-xs font-bold mb-2">
+              <div className="col-span-2">Artículo</div>
+              <div className="col-span-4">Nombre</div>
+              <div className="col-span-1 text-center">U.med.</div>
+              <div className="col-span-1 text-right">Unidades</div>
+              <div className="col-span-2 text-right">Precio</div>
+              <div className="col-span-2 text-right">Importe</div>
+            </div>
+
+            {itemsProcesados.map((item, index) => (
+              <div key={index} className="border-b border-gray-200 py-2">
+                <div className="grid grid-cols-12 gap-2 text-xs items-start">
+                  <div className="col-span-2 font-bold text-gray-800">
+                    SKU{String(index + 1).padStart(4, '0')}
+                  </div>
+                  <div className="col-span-4">
+                    <p className="font-bold text-gray-800">{item.nombre}</p>
+                  </div>
+                  <div className="col-span-1 text-center text-gray-600">PIEZA</div>
+                  <div className="col-span-1 text-right font-bold text-gray-800">
+                    {item.cantidad}
+                  </div>
+                  <div className="col-span-2 text-right text-gray-800">
+                    ${conFactura ? item.precioSinIva.toFixed(2) : item.precioConIva.toFixed(2)}
+                  </div>
+                  <div className="col-span-2 text-right font-bold text-gray-800">
+                    ${conFactura ? item.importeSinIva.toFixed(2) : item.importeConIva.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Totales */}
-          <div className="p-5 md:p-6 lg:p-8 border-t-2" style={{ borderColor: '#00162f' }}>
-            <div className="max-w-md ml-auto space-y-2 md:space-y-3">
-              <div className="flex justify-between items-center text-xs md:text-base">
-                <span className="font-bold text-gray-600">Subtotal:</span>
-                <span className="font-black text-gray-800">${subtotal.toFixed(2)}</span>
+          {/* TOTALES */}
+          <div className="border-t-2 border-gray-300 p-4 md:p-6">
+            <div className="max-w-md ml-auto space-y-2">
+              {conFactura ? (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-gray-600">Subtotal (sin IVA)</span>
+                    <span className="font-bold text-gray-800">${subtotalSinIva.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-gray-600">IVA 16%</span>
+                    <span className="font-bold text-gray-800">${iva.toFixed(2)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium text-gray-600">Subtotal (IVA incluido)</span>
+                  <span className="font-bold text-gray-800">${subtotalConIva.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <span className="font-medium text-gray-600">Gastos de Maniobra 4%</span>
+                <span className="font-bold text-gray-800">${gastoManiobra.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center text-xs md:text-base pb-3 border-b border-gray-300">
-                <span className="font-bold text-gray-600">IVA (16%):</span>
-                <span className="font-black text-gray-800">${iva.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 md:pt-3">
-                <span className="text-base md:text-xl font-black" style={{ color: '#00162f' }}>
-                  TOTAL:
-                </span>
-                <span className="text-xl md:text-3xl font-black" style={{ color: '#fbbf24' }}>
+              <div className="flex justify-between pt-2 border-t-2 border-gray-300">
+                <span className="text-base md:text-lg font-black text-gray-800">Total (MXN)</span>
+                <span className="text-lg md:text-xl font-black text-gray-800">
                   ${total.toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="p-5 md:p-6 lg:p-8 text-center border-t" style={{ backgroundColor: '#00162f' }}>
-            <p className="text-xs md:text-sm text-white font-medium mb-2">
+          {/* MEMBRETE INFERIOR (solo si conFactura) */}
+          {conFactura && (
+            <>
+              <div className="bg-gray-50 p-4 md:p-6 border-t-2 border-gray-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
+                  <p><span className="font-bold">Método de pago:</span> PUE/Pago en una sola exhibición</p>
+                  <p><span className="font-bold">Forma de pago:</span> 03/Transferencia electrónica</p>
+                  <p><span className="font-bold">CFDI:</span> 4.0/Ingreso</p>
+                  <p><span className="font-bold">Uso del CFDI:</span> G03/Gastos en general</p>
+                </div>
+              </div>
+
+              <div className="p-4 md:p-6 bg-white border-t border-gray-300">
+                <p className="text-[8px] md:text-[9px] text-gray-500 leading-tight mb-2">
+                  <span className="font-bold">Este documento es una representación impresa de un CFDI.</span>
+                </p>
+                <p className="text-[8px] md:text-[9px] text-gray-500 leading-tight mb-1">
+                  <span className="font-bold">Folio del SAT:</span> {numeroFactura}-UUID-SIMULADO-{Date.now().toString().slice(-12)}
+                </p>
+                <p className="text-[8px] md:text-[9px] text-gray-500 leading-tight mb-1">
+                  <span className="font-bold">Fecha de certificación:</span> {fecha} {hora}
+                </p>
+                <p className="text-[8px] md:text-[9px] text-gray-500 leading-tight mb-1">
+                  <span className="font-bold">Certificado del emisor:</span> 00001000000721169314
+                </p>
+                <p className="text-[8px] md:text-[9px] text-gray-500 leading-tight mb-2">
+                  <span className="font-bold">Lugar de expedición:</span> 28050
+                </p>
+                
+                <div className="text-[7px] md:text-[8px] text-gray-400 leading-tight break-all">
+                  <p className="mb-1"><span className="font-bold">Sello digital del CFDI:</span></p>
+                  <p className="mb-2">aMlMfFY+pFuzoA+IgDj9ErQz40XRdfhEXX4fatS/7ruLO5QJWjFmlXOSjB0aZ...</p>
+                  
+                  <p className="mb-1"><span className="font-bold">Sello digital del SAT:</span></p>
+                  <p>oBpeiz7vZgWjefvYJrmhJ1o7+d23lTLYXCzM8tENo+KN3RaRkANlzvDoPvVF7A...</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* FOOTER común */}
+          <div className="p-4 text-center border-t-2 border-gray-300" style={{ backgroundColor: '#00162f' }}>
+            <p className="text-xs text-white font-medium mb-1">
               ¡Gracias por tu compra!
             </p>
-            <p className="text-[10px] md:text-xs text-yellow-400 break-words">
-              www.bodegadeazulejos.com | contacto@bodegadeazulejos.com
+            <p className="text-[10px] text-yellow-400">
+              www.bodegadeazulejos.com | contacto@bodegadeazulejos.com | Tel: (55) 1234-5678
             </p>
           </div>
         </div>

@@ -1,13 +1,13 @@
 'use client'
 import { useState } from 'react'
-import { Home, Grid, Tag, ShoppingCart, MessageCircle, X } from 'lucide-react'
+import { User, Home, Grid, Tag, ShoppingCart, MessageCircle, X } from 'lucide-react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/context/authContext'
 
 export default function BottomNav({ setCategory, currentCategory }) {
     const router = useRouter()
     const pathname = usePathname()
-    const { cartCount } = useAuth()
+    const { cartCount, user } = useAuth()
     
     // --- ESTADO LOCAL PARA EL DESPLEGABLE ---
     const [showCategories, setShowCategories] = useState(false)
@@ -58,7 +58,7 @@ export default function BottomNav({ setCategory, currentCategory }) {
                 </div>
             )}
 
-            <div className='grid grid-cols-5 h-16 relative bg-white'>
+            <div className='grid grid-cols-6 h-16 relative bg-white'>
                 {/* INICIO */}
                 <button 
                     onClick={() => router.push('/')} 
@@ -85,7 +85,7 @@ export default function BottomNav({ setCategory, currentCategory }) {
                 </button> */}
 
                 {/* PISOS */}
-                <button onClick={() => router.push('/pisos')} className={`flex flex-col items-center justify-center gap-1 ${pathname === '/ofertas' ? 'text-blue-600' : 'text-gray-500'}`}>
+                <button onClick={() => router.push('/pisos')} className={`flex flex-col items-center justify-center gap-1 ${pathname === '/pisos' ? 'text-blue-600' : 'text-gray-500'}`}>
                     <Grid size={22} />
                     <span className='text-[10px] font-medium'>Pisos</span>
                 </button>
@@ -97,6 +97,8 @@ export default function BottomNav({ setCategory, currentCategory }) {
                 </button>
 
                 {/* CARRITO */}
+                {user &&
+                <>
                 <button onClick={() => router.push('/carrito')} className={`relative flex flex-col items-center justify-center gap-1 ${pathname === '/carrito' ? 'text-blue-600' : 'text-gray-500'}`}>
                     <div className='relative'>
                         <ShoppingCart size={22} />
@@ -108,11 +110,22 @@ export default function BottomNav({ setCategory, currentCategory }) {
                     </div>
                     <span className='text-[10px] font-medium'>Carrito</span>
                 </button>
+                <button onClick={() => router.push('/perfil')} className={`relative flex flex-col items-center justify-center gap-1 ${pathname === '/perfil' ? 'text-blue-600' : 'text-gray-500'}`}>
+                    <User size={22} />
+                    <span className='text-[10px] font-medium'>Mi Perfi</span>
+                </button>
+                </>
+                
+
+                
+                }
+
+              
 
                 {/* CHATBOT */}
-                <button onClick={() => router.push('/chat')} className={`flex flex-col items-center justify-center gap-1 ${pathname === '/chatbot' ? 'text-blue-600' : 'text-gray-500'}`}>
+                <button onClick={() => router.push('/tracking-pedido')} className={`flex flex-col items-center justify-center gap-1 ${pathname === '/chatbot' ? 'text-blue-600' : 'text-gray-500'}`}>
                     <MessageCircle size={22} />
-                    <span className='text-[10px] font-medium'>Chatbot</span>
+                    <span className='text-[10px] font-medium'>Pedidos</span>
                 </button>
             </div>
         </nav>
