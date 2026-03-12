@@ -116,9 +116,9 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                             {user ? (
                                 <div className='flex items-center gap-2'>
 
-                                <Link href='/perfil' className={getBtnStyle('/perfil')}>
+                                {/* <Link href='/perfil' className={getBtnStyle('/perfil')}>
                                     <User size={20} />
-                                </Link>
+                                </Link> */}
 
                                 <button 
                                         onClick={logout} 
@@ -144,10 +144,10 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                                         Hola, <span className='text-white font-semibold'>{user.nombre}</span>
                                     </span>
 
-                                    <Link href="/perfil" className={getBtnStyle('/perfil')}>
+                                    {/* <Link href="/perfil" className={getBtnStyle('/perfil')}>
                                     <User size={18} />
                                         <span className="text-xs font-bold">Mi Perfil</span>
-                                    </Link>
+                                    </Link> */}
 
                                     <Link href='/' className={getBtnStyle('/')}>
                                         <ShoppingBag size={18} />

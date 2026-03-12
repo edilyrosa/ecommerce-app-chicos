@@ -110,10 +110,10 @@ export default function BottomNav({ setCategory, currentCategory }) {
                     </div>
                     <span className='text-[10px] font-medium'>Carrito</span>
                 </button>
-                <button onClick={() => router.push('/perfil')} className={`relative flex flex-col items-center justify-center gap-1 ${pathname === '/perfil' ? 'text-blue-600' : 'text-gray-500'}`}>
+                {/* <button onClick={() => router.push('/perfil')} className={`relative flex flex-col items-center justify-center gap-1 ${pathname === '/perfil' ? 'text-blue-600' : 'text-gray-500'}`}>
                     <User size={22} />
                     <span className='text-[10px] font-medium'>Mi Perfi</span>
-                </button>
+                </button> */}
                 </>
                 
 

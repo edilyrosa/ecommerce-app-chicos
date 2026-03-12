@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 import PromoBanner from "@/components/PromoBanner";
 import BottomNav from "@/components/BottomNav";
-import {ShoppingCart } from 'lucide-react';
+import {ShoppingCart, Trash2 } from 'lucide-react';
 
 export default function Carrito() {
   const [items, setItems] = useState([]);
@@ -139,6 +139,33 @@ export default function Carrito() {
     [filteredItems]
   );
   const tieneErrores = itemsConError.length > 0;
+
+  // Nueva función para vaciar carrito
+  const handleVaciarCarrito = async () => {
+    if (!confirm('¿Estás seguro de vaciar el carrito?')) return;
+
+    try {
+      const token = Cookies.get('token');
+      const res = await fetch('/api/carrito/limpiar', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setItems([]);
+        setFilteredItems([]);
+        setCartCount(0);
+        toast.success('Carrito vaciado');
+      } else {
+        toast.error(data.error || 'Error al vaciar el carrito');
+      }
+    } catch (error) {
+      console.error('Error al vaciar carrito:', error);
+      toast.error('Error de conexión');
+    }
+  };
 
   if (loading) {
     return (
@@ -275,8 +302,22 @@ export default function Carrito() {
               />
             </div>
 
+
             <div className="lg:col-span-1">
+
+
               <div className="bg-white p-6 rounded-2xl shadow-lg sticky top-24 border" style={{ borderColor: '#00162f20' }}>
+                {/* Botón Vaciar carrito (solo si hay items) */}
+                {items.length > 0 && (
+                  <button
+                    onClick={handleVaciarCarrito}
+                    className="w-full mb-4 py-2 rounded-lg font-bold text-sm border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Vaciar carrito
+                  </button>
+                )}
+
                 <h2 className="text-lg md:text-xl font-black mb-4" style={{ color: '#00162f' }}>
                   {searchTerm ? 'Total Filtrado' : 'Total Carrito'}
                 </h2>

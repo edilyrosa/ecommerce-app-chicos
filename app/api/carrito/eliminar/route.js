@@ -1,4 +1,8 @@
-// app/api/carrito/eliminar/route.js
+//? app/api/carrito/eliminar/route.js
+// Realiza el checkout: verifica stock, 
+// descuenta existencias y luego elimina el carrito. 
+// Solo debe usarse al confirmar la compra.
+
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verificarToken } from '@/lib/auth';
