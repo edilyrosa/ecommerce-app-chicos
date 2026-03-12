@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 import PromoBanner from "@/components/PromoBanner";
 import BottomNav from "@/components/BottomNav";
+import {ShoppingCart } from 'lucide-react';
 
 export default function Carrito() {
   const [items, setItems] = useState([]);
@@ -150,7 +151,16 @@ export default function Carrito() {
         />
         <main className="flex-1 container mx-auto px-3 md:px-6 py-4 md:py-8">
           <div className="h-8 md:h-10 w-40 md:w-48 bg-linear-to-r from-blue-100 to-yellow-100 rounded-lg animate-pulse mb-6 md:mb-8" />
-          
+             {/* SECCIÓN DEL TÍTULO ESTILIZADO */}
+        <div className="flex items-center justify-center gap-3 m-auto text-center">
+            <h1 className="text-xl md:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 tracking-tight">
+                MI CARRITO
+            </h1>
+            <div className="p-2 bg-white rounded-full shadow-sm border border-gray-100 animate-bounce-short">
+            <ShoppingCart className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
+            </div>
+        </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               {[...Array(3)].map((_, i) => (
@@ -177,6 +187,15 @@ export default function Carrito() {
           </div>
         </main>
         <BottomNav setCategory={setCategory} currentCategory={category} />
+        <style jsx global>{`
+          @keyframes bounce-short {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+          }
+          .animate-bounce-short {
+            animation: bounce-short 2s ease-in-out infinite;
+          }
+        `}</style>
       </div>
     );
   }
@@ -197,10 +216,17 @@ export default function Carrito() {
 
       <main className="flex-1 container mx-auto px-3 md:px-6 py-4 md:py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 md:mb-0" style={{ color: '#00162f' }}>
-            Mi Carrito
-          </h1>
-          
+
+        {/* SECCIÓN DEL TÍTULO ESTILIZADO */}
+        <div className="flex items-center justify-center gap-3  m-auto text-center">
+            <h1 className="text-xl md:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 tracking-tight">
+                MI CARRITO
+            </h1>
+            <div className="p-2 bg-white rounded-full shadow-sm border border-gray-100 animate-bounce-short">
+            <ShoppingCart className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
+            </div>
+        </div>
+            
           {searchTerm && (
             <p className="text-xs md:text-sm text-gray-600 font-medium">
               {filteredItems.length} de {items.length} producto{items.length !== 1 ? 's' : ''}
@@ -294,6 +320,16 @@ export default function Carrito() {
         )}
       </main>
       <BottomNav setCategory={setCategory} currentCategory={category} />
+       <style jsx global>{`
+      @keyframes bounce-short {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+      }
+      .animate-bounce-short {
+        animation: bounce-short 2s ease-in-out infinite;
+      }
+    `}</style>
     </div>
+    
   );
 }

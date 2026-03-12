@@ -1,139 +1,130 @@
-<style jsx global>{`
-
-  @keyframes bounce-short {
-
-    0%, 100% { transform: translateY(0); }
-
-    50% { transform: translateY(-5px); }
-
-  }
-
- 
-
-  .animate-bounce-short {
-
-    animation: bounce-short 2s ease-in-out infinite;
-
-  }
-
-
-
-  @keyframes fadeIn {
-
-    from { opacity: 0; }
-
-    to { opacity: 1; }
-
-  }
-
-
-
-  .animate-fadeIn {
-
-    animation: fadeIn 0.3s ease-out;
-
-  }
-
-
-
-  /* ZOOM CON CLICK - Solo en pantallas >= MD (768px+) */
-
-  @media(max-width:768px) {
-    .products-grid-zoom .product-card-zoom.zoomed {
-      margin: 0.5rem 1rem 1rem 0;
-      }
-      }
-      
-      @media(min-width:768px) {
-        .products-grid-zoom .product-card-zoom.zoomed {
-          max-width: 30vw;
-    }
-  }
-
-
-
-    .products-grid-zoom .product-card-zoom {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
-
-    }
-
-
-
-    /* Card en estado zoom (centrada) - AQUÍ ESTÁ EL CAMBIO */
-
-    .products-grid-zoom .product-card-zoom.zoomed {
-
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(2); /* ← CAMBIO: scale(1) a scale(2) */
-      z-index: 100;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
-      animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-    }
-
-
-
-    @keyframes zoomIn {
-
-      from {
-
-        transform: translate(-50%, -50%) scale(0.5); /* ← CAMBIO: scale(0.8) a scale(0.5) */
-
-        opacity: 0;
-
-      }
-
-      to {
-
-        transform: translate(-50%, -50%) scale(2); /* ← CAMBIO: scale(1) a scale(2) */
-
-        opacity: 1;
-
-      }
-
-    }
-
-
-
-    /* Cards hermanas cuando hay una en zoom */
-
-    .products-grid-zoom.has-zoomed .product-card-zoom:not(.zoomed) {
-
-      transform: scale(0.85);
-
-      opacity: 0.3;
-
-      filter: blur(3px) grayscale(40%);
-
-      pointer-events: none;
-
-    }
-
-  }
-
-
-
-
-
-  }
-
-`}</style>
-
-
-
-
-       {/* <div className="space-y-3 md:space-y-4 border-b border-dashed pb-4 md:pb-6 mb-4 md:mb-6" style={{ borderColor: '#00162f20' }}>
-                  <div className="flex justify-between text-sm md:text-base text-gray-600 font-medium">
-                    <span>Subtotal:</span>
-                    <span className="font-bold">${subtotal.toFixed(2)}</span>
+   /* Calculadora para cerámicos */
+              <div className='rounded-xl p-3 lg:p-4 border-2' style={{ backgroundColor: '#00162f', borderColor: '#00162f' }}>
+                <div className='flex items-center gap-2 mb-3'>
+                  <div className='bg-yellow-400 p-1.5 rounded-lg'>
+                    <Calculator className='w-4 h-4 lg:w-4 lg:h-4' style={{ color: '#00162f' }} />
                   </div>
-                   <div className="flex justify-between text-sm md:text-base text-gray-600 font-medium">
-                    <span>IVA (16%):</span>
-                    <span className="font-bold">${(subtotal * 0.16).toFixed(2)}</span>
-                  </div> 
-                </div> */}
+                  <h3 className='text-sm lg:text-base font-black text-white'>
+                    Calcula Cajas
+                  </h3>
+                </div>
+
+                <div className='space-y-2.5'>
+                  <div className='grid grid-cols-2 gap-2'>
+                    <div>
+                      <label className='block text-[9px] font-bold text-yellow-400 mb-1 uppercase'>
+                        Ancho (m)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={ancho}
+                        onChange={(e) => setAncho(e.target.value)}
+                        placeholder="10"
+                        className='w-full px-2 py-1.5 border-2 border-gray-600 rounded-lg font-bold text-xs bg-gray-800 text-white focus:border-yellow-400 focus:outline-none transition-colors'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-[9px] font-bold text-yellow-400 mb-1 uppercase'>
+                        Largo (m)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={largo}
+                        onChange={(e) => setLargo(e.target.value)}
+                        placeholder="10"
+                        className='w-full px-2 py-1.5 border-2 border-gray-600 rounded-lg font-bold text-xs bg-gray-800 text-white focus:border-yellow-400 focus:outline-none transition-colors'
+                      />
+                    </div>
+                  </div>
+
+                  {ancho && largo && parseFloat(ancho) > 0 && parseFloat(largo) > 0 && (
+                    <div className='bg-gray-800 rounded-lg p-2 border border-gray-700'>
+                      <p className='text-[9px] text-gray-400 mb-0.5'>Área a cubrir</p>
+                      <p className='text-base lg:text-lg font-black text-white'>
+                        {(parseFloat(ancho) * parseFloat(largo)).toFixed(2)} m²
+                        {incluirExtra && (
+                          <span className='text-xs text-yellow-400 ml-1.5'>
+                            +10%
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  <label className='flex items-start gap-2 cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-700 hover:border-yellow-400 transition-colors'>
+                    <input
+                      type="checkbox"
+                      checked={incluirExtra}
+                      onChange={(e) => setIncluirExtra(e.target.checked)}
+                      className='w-3.5 h-3.5 accent-yellow-400 mt-0.5 flex-shrink-0'
+                    />
+                    <span className='text-[10px] lg:text-xs font-semibold text-white leading-tight'>
+                      +10% extra para cortes
+                    </span>
+                  </label>
+
+                  <button
+                    onClick={calcularCajas}
+                    disabled={!ancho || !largo}
+                    className='w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-700 py-2 rounded-lg font-black text-xs lg:text-sm transition-all active:scale-95 flex items-center justify-center gap-2'
+                    style={{ color: '#00162f' }}
+                  >
+                    <Calculator className="w-4 h-4" />
+                    Calcular
+                  </button>
+
+                  {cajasNecesarias !== null && (
+                    <div className='bg-white rounded-lg p-3 animate-in fade-in zoom-in duration-300'>
+                      <div className='flex items-center justify-between mb-2.5'>
+                        <div>
+                          <p className='text-[9px] text-gray-500 mb-0.5'>Cajas necesarias</p>
+                          <p className='text-2xl font-black flex items-center gap-1.5' style={{ color: '#00162f' }}>
+                            <Package className="w-5 h-5" />
+                            {cajasNecesarias}
+                          </p>
+                        </div>
+                        <div className='text-right'>
+                          <p className='text-[9px] text-gray-500 mb-0.5'>Stock</p>
+                          <p className={`text-lg font-black ${
+                            producto.stock >= cajasNecesarias ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {producto.stock}
+                          </p>
+                        </div>
+                      </div>
+
+                      {stockInsuficiente ? (
+                        <>
+                          <button
+                            onClick={handleWhatsApp}
+                            className='w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95'
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            WhatsApp
+                          </button>
+                          <div className='flex items-start gap-1.5 mt-2 bg-red-50 border border-red-200 rounded p-2'>
+                            <AlertTriangle className='text-red-600 shrink-0 w-3.5 h-3.5 mt-0.5' />
+                            <p className='text-xs text-red-700 font-medium leading-tight'>
+                              Stock insuficiente. Contacta con nosotros para hacer el pedido completo.
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <button
+                          onClick={handleAddToCart}
+                          disabled={addingToCart}
+                          className='w-full bg-yellow-400 hover:bg-yellow-500 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 disabled:bg-gray-400'
+                          style={{ color: '#00162f' }}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          {addingToCart ? 'Agregando...' : `Agregar ${cajasNecesarias}`}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>MODIFICALO, PARA QUE AL MOMENTO DE MOSTRAR CUANTAS CAJAS DE AZULEJOS O PISOS NECESITA SEGUN EL AREA A CUBRIR, LE APAREZCA LA SUGERENCIA DE COMPRAR LA CANTIDAD NECESARIA DE PEGAPISO Y 
