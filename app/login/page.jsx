@@ -4,7 +4,7 @@ import { useAuth } from '../../context/authContext';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import toast from 'react-hot-toast';
-import PromoBanner from "@/components/PromoBanner";
+import PromoBanner from "../../components/PromoBanner";
 
 // Funciones de validación
 const validarEmail = (email) => {

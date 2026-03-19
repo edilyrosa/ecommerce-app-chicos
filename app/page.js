@@ -1,10 +1,10 @@
 // app/page.jsx
 "use client"
 import { useState, useEffect } from "react";
-import Header from "@/components/Header"
-import PromoBanner from "@/components/PromoBanner"
-import BottomNav from "@/components/BottomNav"
-import ProductCard from "@/components/ProductCard";
+import Header from "../components/Header"
+import PromoBanner from "../components/PromoBanner"
+import BottomNav from "../components/BottomNav"
+import ProductCard from "../components/ProductCard";
 import toast from "react-hot-toast";
 import { ShoppingBag, Home, Hammer, Leaf, Bath, Search } from 'lucide-react';
 

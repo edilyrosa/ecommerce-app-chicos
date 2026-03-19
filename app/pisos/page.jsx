@@ -1,3 +1,4 @@
+//app/pisos/page.jsx
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import Header from '@/components/Header'
@@ -6,8 +7,6 @@ import BottomNav from '@/components/BottomNav'
 import ProductPiso from '@/components/ProductPiso'
 import toast from 'react-hot-toast'
 import { Filter } from 'lucide-react'
-
-// Definir las líneas que consideramos "cerámicas" (ajusta según tu negocio)
 const LINEAS_CERAMICAS = ['Pisos', 'Azulejos', 'Decorados', 'Pegamentos', 'Pastas']
 
 export default function PisosPage() {

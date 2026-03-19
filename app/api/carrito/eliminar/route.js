@@ -1,83 +1,136 @@
-//? app/api/carrito/eliminar/route.js
-// Realiza el checkout: verifica stock, 
-// descuenta existencias y luego elimina el carrito. 
-// Solo debe usarse al confirmar la compra.
+// //? app/api/carrito/eliminar/route.js
+// // Realiza el checkout: verifica stock, 
+// // descuenta existencias y luego elimina el carrito. 
+// // Solo debe usarse al confirmar la compra.
+
+// import { NextResponse } from 'next/server';
+// import { supabase } from '@/lib/supabase';
+// import { verificarToken } from '@/lib/auth';
+
+// export async function DELETE(request) { 
+//   try {
+   
+//     const authHeader = request.headers.get('authorization');
+    
+//     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//       return NextResponse.json(
+//         { error: 'No autorizado' },
+//         { status: 401 }
+//       );
+//     }
+
+//     const token = authHeader.split(' ')[1];
+//     const result = verificarToken(token);
+
+//     if (!result.valid) {
+//       return NextResponse.json(
+//         { error: 'Token inválido' },
+//         { status: 401 }
+//       );
+//     }
+
+//     const { carritoId } = await request.json();
+
+//     if (!carritoId) {
+//       return NextResponse.json(
+//         { error: 'ID de carrito requerido' },
+//         { status: 400 }
+//       );
+//     }
+
+//     //* Verificar que el item existe y pertenece al usuario
+//     const { data: item } = await supabase
+//       .from('carritos')
+//       .select('*')
+//       .eq('id', carritoId)
+//       .eq('usuario_id', result.data.id)  // ← Seguridad
+//       .single();
+
+//     if (!item) {
+//       return NextResponse.json(
+//         { error: 'Item no encontrado o no autorizado' },
+//         { status: 404 }
+//       );
+//     }
+
+//     //* ELIMINAR (igual estructura que tu POST)
+//     const { error } = await supabase
+//       .from('carritos')
+//       .delete()
+//       .eq('id', carritoId)
+//       .eq('usuario_id', result.data.id);
+
+//     if (error) {
+//       console.error('Error al eliminar del carrito:', error);
+//       return NextResponse.json(
+//         { error: 'Error al eliminar del carrito' },
+//         { status: 500 }
+//       );
+//     }
+
+//   return NextResponse.json({ 
+//     // message: 'Producto eliminado del carrito' ANTES
+//     message: `${item.item_type === 'product' ? 'Producto' : 'Piso'} eliminado del carrito`  //!OJITO ACA
+//   });
+
+//   } catch (error) {
+//     console.error('Error en eliminar carrito:', error);
+//     return NextResponse.json(
+//       { error: 'Error en el servidor' },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verificarToken } from '@/lib/auth';
 
-export async function DELETE(request) { 
+export async function DELETE(request) {
   try {
-   
     const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const token = authHeader.split(' ')[1];
     const result = verificarToken(token);
-
     if (!result.valid) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const { carritoId } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const carritoId = searchParams.get('id');
 
     if (!carritoId) {
-      return NextResponse.json(
-        { error: 'ID de carrito requerido' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'ID de carrito requerido' }, { status: 400 });
     }
 
-    //* Verificar que el item existe y pertenece al usuario
+    // Verificar que el item pertenezca al usuario
     const { data: item } = await supabase
       .from('carritos')
-      .select('*')
+      .select('id')
       .eq('id', carritoId)
-      .eq('usuario_id', result.data.id)  // ← Seguridad
+      .eq('usuario_id', result.data.id)
       .single();
 
     if (!item) {
-      return NextResponse.json(
-        { error: 'Item no encontrado o no autorizado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Item no encontrado o no autorizado' }, { status: 404 });
     }
 
-    //* ELIMINAR (igual estructura que tu POST)
     const { error } = await supabase
       .from('carritos')
       .delete()
-      .eq('id', carritoId)
-      .eq('usuario_id', result.data.id);
+      .eq('id', carritoId);
 
-    if (error) {
-      console.error('Error al eliminar del carrito:', error);
-      return NextResponse.json(
-        { error: 'Error al eliminar del carrito' },
-        { status: 500 }
-      );
-    }
+    if (error) throw error;
 
-  return NextResponse.json({ 
-    // message: 'Producto eliminado del carrito' ANTES
-    message: `${item.item_type === 'product' ? 'Producto' : 'Piso'} eliminado del carrito`  //!OJITO ACA
-  });
-
+    return NextResponse.json({ message: 'Producto eliminado del carrito' });
   } catch (error) {
     console.error('Error en eliminar carrito:', error);
-    return NextResponse.json(
-      { error: 'Error en el servidor' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
   }
 }

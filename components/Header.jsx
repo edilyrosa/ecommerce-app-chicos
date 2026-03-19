@@ -1,8 +1,8 @@
-// //app/components/Header.jsx'
+// // app/components/Header.jsx
 // 'use client'
-// import { Grid, ShoppingCart, User, ShoppingBag, ChevronDown, LayoutGrid, Search, LogOut, Tag, MessageCircle } from 'lucide-react'
+// import { Grid, ShoppingCart, User, ShoppingBag, ChevronDown, LayoutGrid, Search, LogOut, Tag, MessageCircle, Settings } from 'lucide-react'
 // import Link from 'next/link'
-// import { useAuth } from '@/context/authContext';
+// import { useAuth } from '../context/authContext';
 // import { useState } from 'react';
 // import { usePathname } from 'next/navigation';
 
@@ -10,6 +10,7 @@
 //     const { user, cartCount, logout } = useAuth();
 //     const pathname = usePathname();
 //     const [showMenu, setShowMenu] = useState(false);
+//     const [showAdminMenu, setShowAdminMenu] = useState(false); // Para móvil
 
 //     const categorias = [
 //         { id: 'todas',      label: 'Todas' },
@@ -35,12 +36,14 @@
 //         return `${baseClasses} bg-transparent border-white/30 text-white hover:bg-white/10 hover:border-white/50`;
 //     };
 
+//     // Verificar si el usuario es administrador (por email)
+//     const isAdmin = user?.email === 'admin@gmail.com';
+
 //     // Componente SearchBar con acceso a todas las variables
 //     const renderSearchBar = () => (
-//         <div className='text-white shadow-lg '>
-//             <div className='container mx-auto px-4 py-2.5  bg-[#00162f]'>
+//         <div className='text-white shadow-lg'>
+//             <div className='container mx-auto px-4 py-2.5 bg-[#00162f]'>
 //                 <div className='flex gap-2 items-center relative'>
-                    
 //                     {/* Botón de Categorías */}
 //                     <div className='relative'>
 //                         <button 
@@ -57,7 +60,7 @@
 //                         </button>
 
 //                         {showMenu && (
-//                             <div className='absolute top-full left-0 mt-2 w-52  bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in zoom-in duration-200'>
+//                             <div className='absolute top-full left-0 mt-2 w-52 bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in zoom-in duration-200'>
 //                                 <div className='flex flex-col gap-1'>
 //                                     {categorias.map((cat) => (
 //                                         <button
@@ -77,14 +80,14 @@
 //                         )}
 //                     </div>
 
-//                     {/* //* Input de búsqueda */}
+//                     {/* Input de búsqueda */}
 //                     <div className='relative flex-1 group'>
 //                         <input
 //                             type='text'
 //                             placeholder='Buscar productos...'
 //                             value={searchTerm}
 //                             onChange={(e) => setSearchTerm(e.target.value)}
-//                             className='w-full pl-10 pr-4 py-2 text-sm text-white  bg-[#00162f] border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
+//                             className='w-full pl-10 pr-4 py-2 text-sm text-white bg-[#00162f] border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
 //                         />
 //                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 group-focus-within:text-yellow-400 transition-colors' />
 //                     </div>
@@ -94,40 +97,57 @@
 //     );
 
 //     return (
-// <>
-//            {/* HEADER: Logo y Navegación */}
+//         <>
+//             {/* HEADER: Logo y Navegación */}
 //             <header className='md:sticky md:top-0 z-50 shadow-2xl text-white bg-[#00162f]'>
-//                 <div className=' text-white shadow-lg'>
+//                 <div className='text-white shadow-lg'>
 //                     <div className='container mx-auto px-4 py-2.5 flex items-center justify-between'>
                         
 //                         {/* Logo */}
 //                         <Link href={'/'} className="shrink-0">
-//                         <div className='flex items-center gap-3'>
-//                            <img src='/logo.png' alt='Logo' className='w-12 md:w-14 object-contain' />
-//                            <span className=' text-[9px] md:text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
-//                                 BODEGA DE AZULEJOS
-//                             </span>
-
-//                         </div>
+//                             <div className='flex items-center gap-3'>
+//                                 <img src='/logo.png' alt='Logo' className='w-12 md:w-14 object-contain' />
+//                                 <span className='text-[9px] md:text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
+//                                     BODEGA DE AZULEJOS
+//                                 </span>
+//                             </div>
 //                         </Link>
 
-//                         {/* MÓVIL: Solo icono de perfil */}
-//                         <div className='md:hidden'>
-//                             {user ? (
-//                                 <div className='flex items-center gap-2'>
-
-//                                 {/* <Link href='/perfil' className={getBtnStyle('/perfil')}>
-//                                     <User size={20} />
-//                                 </Link> */}
-
-//                                 <button 
-//                                         onClick={logout} 
+//                         {/* MÓVIL: Solo icono de perfil y menú admin (si aplica) */}
+//                         <div className='md:hidden flex items-center gap-2'>
+//                             {isAdmin && (
+//                                 <div className='relative'>
+//                                     <button 
+//                                         onClick={() => setShowAdminMenu(!showAdminMenu)}
 //                                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-blue-900 transition-all"
 //                                     >
-//                                         <LogOut size={18} />
-//                                         <span className="text-xs font-bold">Salir</span>
+//                                         <Settings size={18} />
 //                                     </button>
+//                                     {showAdminMenu && (
+//                                         <div className='absolute right-0 mt-2 w-48 bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in'>
+//                                             <div className='flex flex-col gap-1'>
+//                                                 <Link href='/productos' className="w-full text-left py-2 px-4 rounded-xl text-sm font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
+//                                                     Productos
+//                                                 </Link>
+//                                                 <Link href='/actualizar-pedidos' className="w-full text-left py-2 px-4 rounded-xl text-sm font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
+//                                                     Actualizar Pedidos
+//                                                 </Link>
+//                                                 <Link href='/crud-productos' className="w-full text-left py-2 px-4 rounded-xl text-sm font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
+//                                                     CRUD Productos
+//                                                 </Link>
+//                                             </div>
+//                                         </div>
+//                                     )}
 //                                 </div>
+//                             )}
+//                             {user ? (
+//                                 <button 
+//                                     onClick={logout} 
+//                                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-blue-900 transition-all"
+//                                 >
+//                                     <LogOut size={18} />
+//                                     <span className="text-xs font-bold">Salir</span>
+//                                 </button>
 //                             ) : (
 //                                 <Link href='/login' className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow-400 bg-yellow-400 text-blue-900 font-bold hover:bg-yellow-300 transition-all">
 //                                     <User size={18} />
@@ -144,11 +164,7 @@
 //                                         Hola, <span className='text-white font-semibold'>{user.nombre}</span>
 //                                     </span>
 
-//                                     {/* <Link href="/perfil" className={getBtnStyle('/perfil')}>
-//                                     <User size={18} />
-//                                         <span className="text-xs font-bold">Mi Perfil</span>
-//                                     </Link> */}
-
+//                                     {/* Enlaces para cliente regular */}
 //                                     <Link href='/' className={getBtnStyle('/')}>
 //                                         <ShoppingBag size={18} />
 //                                         <span className="text-xs font-bold">Tienda</span>
@@ -181,6 +197,21 @@
 //                                         <span className="text-xs font-bold">Tus Pedidos</span>
 //                                     </Link>
 
+//                                     {/* Enlaces para administrador */}
+//                                     {isAdmin && (
+//                                         <>
+//                                             <Link href='/productos' className={getBtnStyle('/productos')}>
+//                                                 <span className="text-xs font-bold">Productos</span>
+//                                             </Link>
+//                                             <Link href='/actualizar-pedidos' className={getBtnStyle('/actualizar-pedidos')}>
+//                                                 <span className="text-xs font-bold">Actualizar Pedidos</span>
+//                                             </Link>
+//                                             <Link href='/crud-productos' className={getBtnStyle('/crud-productos')}>
+//                                                 <span className="text-xs font-bold">CRUD Productos</span>
+//                                             </Link>
+//                                         </>
+//                                     )}
+
 //                                     <button 
 //                                         onClick={logout} 
 //                                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-blue-900 transition-all"
@@ -190,9 +221,8 @@
 //                                     </button>
 //                                 </>
 //                             ) : (
-
+//                                 // Usuario no logueado
 //                                 <>
-                                
 //                                     <Link href='/' className={getBtnStyle('/')}>
 //                                         <ShoppingBag size={18} />
 //                                         <span className="text-xs font-bold">Tienda</span>
@@ -207,17 +237,18 @@
 //                                         <Tag size={18} />
 //                                         <span className="text-xs font-bold">Ofertas</span>
 //                                     </Link>
-//                                 <Link href='/login' className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-yellow-400 bg-yellow-400 text-blue-900 font-bold hover:bg-yellow-300 transition-all shadow-lg">
-//                                     <User size={18} />
-//                                     <span className="text-sm">Ingresar</span>
-//                                 </Link>
+
+//                                     <Link href='/login' className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-yellow-400 bg-yellow-400 text-blue-900 font-bold hover:bg-yellow-300 transition-all shadow-lg">
+//                                         <User size={18} />
+//                                         <span className="text-sm">Ingresar</span>
+//                                     </Link>
 //                                 </>
 //                             )}
 //                         </div>
 //                     </div>
 //                 </div>
 
-//                 {/* //& DESKTOP: Buscador dentro del header sticky */}
+//                 {/* DESKTOP: Buscador dentro del header sticky */}
 //                 {setSearchTerm && (
 //                     <div className='hidden md:block'>
 //                         {renderSearchBar()}
@@ -225,30 +256,29 @@
 //                 )}
 //             </header>
 
-//             {/* //& MÓVIL: Buscador sticky independiente */}
+//             {/* MÓVIL: Buscador sticky independiente */}
 //             {setSearchTerm && (
 //                 <div className='md:hidden sticky top-0 z-40'>
 //                     {renderSearchBar()}
 //                 </div>
 //             )}
-//        </> 
+//         </> 
 //     )
 // }
 
 
-
-
 // app/components/Header.jsx
 'use client'
-import { Grid, ShoppingCart, User, ShoppingBag, ChevronDown, LayoutGrid, Search, LogOut, Tag, MessageCircle, Settings } from 'lucide-react'
+import { Edit2, Save, Grid, ShoppingCart, User, ShoppingBag, ChevronDown, LayoutGrid, Search, LogOut, Tag, MessageCircle, Settings } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/context/authContext';
+import { useAuth } from '../context/authContext';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Header({ searchTerm, setSearchTerm, setCategory, currentCategory }) {
     const { user, cartCount, logout } = useAuth();
     const pathname = usePathname();
+    const router = useRouter();
     const [showMenu, setShowMenu] = useState(false);
     const [showAdminMenu, setShowAdminMenu] = useState(false); // Para móvil
 
@@ -265,48 +295,47 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
         setShowMenu(false);
     };
 
-    const getBtnStyle = (path) => {
+    // Estilo para los botones de navegación (icono arriba)
+    const getNavBtnStyle = (path) => {
         const isActive = pathname === path;
-        const baseClasses = "flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-xl border transition-all duration-200 min-w-[50px] md:min-w-fit";
-
+        const baseClasses = "flex flex-col items-center justify-center gap-0.5 md:gap-1 px-1.5 md:px-2 py-1 md:py-1.5 rounded-xl transition-all duration-200 min-w-[50px] md:min-w-[60px]";
         if (isActive) {
-            return `${baseClasses} bg-white border-white text-blue-900 shadow-lg font-bold`;
+            return `${baseClasses} bg-white text-blue-900 shadow-lg font-bold`;
         }
-
-        return `${baseClasses} bg-transparent border-white/30 text-white hover:bg-white/10 hover:border-white/50`;
+        return `${baseClasses} bg-transparent text-white hover:bg-white/10`;
     };
 
     // Verificar si el usuario es administrador (por email)
     const isAdmin = user?.email === 'admin@gmail.com';
 
-    // Componente SearchBar con acceso a todas las variables
+    // Componente SearchBar
     const renderSearchBar = () => (
         <div className='text-white shadow-lg'>
-            <div className='container mx-auto px-4 py-2.5 bg-[#00162f]'>
-                <div className='flex gap-2 items-center relative'>
+            <div className='container mx-auto px-2 md:px-4 py-2 md:py-2.5 bg-[#00162f]'>
+                <div className='flex gap-1 md:gap-2 items-center relative'>
                     {/* Botón de Categorías */}
                     <div className='relative'>
                         <button 
                             onClick={() => setShowMenu(!showMenu)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-sm font-bold shadow-sm ${
+                            className={`flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border transition-all text-xs md:text-sm font-bold shadow-sm ${
                                 showMenu || currentCategory !== 'todas' 
                                 ? 'bg-yellow-400 border-yellow-400 text-blue-900' 
                                 : 'bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50'
                             }`}
                         >
-                            <LayoutGrid size={16} />
-                            <span className='hidden sm:inline text-xs'>Categorías</span>
-                            <ChevronDown size={14} className={`transition-transform duration-200 ${showMenu ? 'rotate-180' : ''}`} />
+                            <LayoutGrid size={14} className="md:w-4 md:h-4" />
+                            <span className='hidden sm:inline text-[10px] md:text-xs'>Categorías</span>
+                            <ChevronDown size={12} className={`transition-transform duration-200 ${showMenu ? 'rotate-180' : ''}`} />
                         </button>
 
                         {showMenu && (
-                            <div className='absolute top-full left-0 mt-2 w-52 bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in zoom-in duration-200'>
+                            <div className='absolute top-full left-0 mt-2 w-40 md:w-52 bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in zoom-in duration-200'>
                                 <div className='flex flex-col gap-1'>
                                     {categorias.map((cat) => (
                                         <button
                                             key={cat.id}
                                             onClick={() => handleCategorySelect(cat.id)}
-                                            className={`w-full text-left py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
+                                            className={`w-full text-left py-1.5 md:py-2 px-3 md:px-4 rounded-xl text-xs md:text-sm font-semibold transition-all ${
                                                 currentCategory === cat.id 
                                                 ? 'bg-yellow-400 text-blue-900' 
                                                 : 'text-white hover:text-[#00162f] hover:bg-white'
@@ -327,9 +356,9 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                             placeholder='Buscar productos...'
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className='w-full pl-10 pr-4 py-2 text-sm text-white bg-[#00162f] border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
+                            className='w-full pl-8 md:pl-10 pr-3 md:pr-4 py-1.5 md:py-2 text-xs md:text-sm text-white bg-[#00162f] border border-blue-700 rounded-lg outline-none transition-all placeholder:text-blue-100 focus:bg-blue-900 focus:border-yellow-400'
                         />
-                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 group-focus-within:text-yellow-400 transition-colors' />
+                        <Search className='absolute left-2 md:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 md:w-4 md:h-4 group-focus-within:text-yellow-400 transition-colors' />
                     </div>
                 </div>
             </div>
@@ -341,38 +370,41 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
             {/* HEADER: Logo y Navegación */}
             <header className='md:sticky md:top-0 z-50 shadow-2xl text-white bg-[#00162f]'>
                 <div className='text-white shadow-lg'>
-                    <div className='container mx-auto px-4 py-2.5 flex items-center justify-between'>
+                    <div className='container mx-auto px-2 md:px-4 py-1.5 md:py-2.5 flex items-center justify-between'>
                         
                         {/* Logo */}
                         <Link href={'/'} className="shrink-0">
-                            <div className='flex items-center gap-3'>
-                                <img src='/logo.png' alt='Logo' className='w-12 md:w-14 object-contain' />
-                                <span className='text-[9px] md:text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.15em' }}>
-                                    BODEGA DE AZULEJOS
-                                </span>
+                            <div className='flex items-center gap-2 md:gap-3'>
+                                <img src='/logo.png' alt='Logo' className='w-10 md:w-14 object-contain' />
+                                {/* Ocultar texto si es admin */}
+                                {!isAdmin && (
+                                    <span className='text-[8px] md:text-xl font-black tracking-widest uppercase' style={{ letterSpacing: '0.1em', lineHeight: 1.2 }}>
+                                        BODEGA DE AZULEJOS
+                                    </span>
+                                )}
                             </div>
                         </Link>
 
-                        {/* MÓVIL: Solo icono de perfil y menú admin (si aplica) */}
-                        <div className='md:hidden flex items-center gap-2'>
+                        {/* MÓVIL: Iconos de perfil y menú admin */}
+                        <div className='md:hidden flex items-center gap-1'>
                             {isAdmin && (
                                 <div className='relative'>
                                     <button 
                                         onClick={() => setShowAdminMenu(!showAdminMenu)}
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-blue-900 transition-all"
+                                        className="flex items-center gap-1 px-2 py-1.5 rounded-xl border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-blue-900 transition-all"
                                     >
-                                        <Settings size={18} />
+                                        <Settings size={16} />
                                     </button>
                                     {showAdminMenu && (
-                                        <div className='absolute right-0 mt-2 w-48 bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in'>
+                                        <div className='absolute right-0 mt-2 w-40 bg-[#00162f] border shadow-2xl rounded-2xl p-2 z-60 animate-in fade-in'>
                                             <div className='flex flex-col gap-1'>
-                                                <Link href='/productos' className="w-full text-left py-2 px-4 rounded-xl text-sm font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
-                                                    Productos
-                                                </Link>
-                                                <Link href='/actualizar-pedidos' className="w-full text-left py-2 px-4 rounded-xl text-sm font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
+                                               
+                                                <Link href='/actualizar-pedidos' className="block text-left py-1.5 px-3 rounded-xl text-xs font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
+                                                     <Save size={16} />
                                                     Actualizar Pedidos
                                                 </Link>
-                                                <Link href='/crud-productos' className="w-full text-left py-2 px-4 rounded-xl text-sm font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
+                                                <Link href='/crud-productos' className="block text-left py-1.5 px-3 rounded-xl text-xs font-semibold text-white hover:bg-yellow-400 hover:text-blue-900 transition-all">
+                                                    <Edit2 size={16} />
                                                     CRUD Productos
                                                 </Link>
                                             </div>
@@ -383,15 +415,15 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                             {user ? (
                                 <button 
                                     onClick={logout} 
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-blue-900 transition-all"
+                                    className="flex items-center gap-1 px-2 py-1.5 rounded-xl border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-blue-900 transition-all"
                                 >
-                                    <LogOut size={18} />
-                                    <span className="text-xs font-bold">Salir</span>
+                                    <LogOut size={16} />
+                                    <span className="text-[10px] font-bold">Salir</span>
                                 </button>
                             ) : (
-                                <Link href='/login' className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow-400 bg-yellow-400 text-blue-900 font-bold hover:bg-yellow-300 transition-all">
-                                    <User size={18} />
-                                    <span className="text-xs">Ingresar</span>
+                                <Link href='/login' className="flex items-center gap-1 px-2 py-1.5 rounded-xl border border-yellow-400 bg-yellow-400 text-blue-900 font-bold hover:bg-yellow-300 transition-all">
+                                    <User size={16} />
+                                    <span className="text-[10px]">Ingresar</span>
                                 </Link>
                             )}
                         </div>
@@ -404,23 +436,23 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                                         Hola, <span className='text-white font-semibold'>{user.nombre}</span>
                                     </span>
 
-                                    {/* Enlaces para cliente regular */}
-                                    <Link href='/' className={getBtnStyle('/')}>
+                                    {/* Enlaces para cliente regular con icono arriba */}
+                                    <button onClick={() => router.push('/')} className={getNavBtnStyle('/')}>
                                         <ShoppingBag size={18} />
                                         <span className="text-xs font-bold">Tienda</span>
-                                    </Link>
+                                    </button>
 
-                                    <Link href='/pisos' className={getBtnStyle('/pisos')}>
+                                    <button onClick={() => router.push('/pisos')} className={getNavBtnStyle('/pisos')}>
                                         <Grid size={18} />
                                         <span className="text-xs font-bold">Pisos</span>
-                                    </Link>
+                                    </button>
 
-                                    <Link href='/ofertas' className={getBtnStyle('/ofertas')}>
+                                    <button onClick={() => router.push('/ofertas')} className={getNavBtnStyle('/ofertas')}>
                                         <Tag size={18} />
                                         <span className="text-xs font-bold">Ofertas</span>
-                                    </Link>
+                                    </button>
 
-                                    <Link href='/carrito' className={getBtnStyle('/carrito')}>
+                                    <button onClick={() => router.push('/carrito')} className={getNavBtnStyle('/carrito')}>
                                         <div className="relative">
                                             <ShoppingCart size={18} />
                                             {cartCount > 0 && (
@@ -430,25 +462,25 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                                             )}
                                         </div>
                                         <span className="text-xs font-bold">Carrito</span>
-                                    </Link>
+                                    </button>
 
-                                    <Link href='/tracking-pedido' className={getBtnStyle('/tracking-pedido')}>
+                                    <button onClick={() => router.push('/tracking-pedido')} className={getNavBtnStyle('/tracking-pedido')}>
                                         <MessageCircle size={18} />
                                         <span className="text-xs font-bold">Tus Pedidos</span>
-                                    </Link>
+                                    </button>
 
                                     {/* Enlaces para administrador */}
                                     {isAdmin && (
                                         <>
-                                            <Link href='/productos' className={getBtnStyle('/productos')}>
-                                                <span className="text-xs font-bold">Productos</span>
-                                            </Link>
-                                            <Link href='/actualizar-pedidos' className={getBtnStyle('/actualizar-pedidos')}>
+                                           
+                                            <button onClick={() => router.push('/actualizar-pedidos')} className={getNavBtnStyle('/actualizar-pedidos')}>
+                                                 <Save size={18} />
                                                 <span className="text-xs font-bold">Actualizar Pedidos</span>
-                                            </Link>
-                                            <Link href='/crud-productos' className={getBtnStyle('/crud-productos')}>
+                                            </button>
+                                            <button onClick={() => router.push('/crud-productos')} className={getNavBtnStyle('/crud-productos')}>
+                                                 <Edit2 size={18} />
                                                 <span className="text-xs font-bold">CRUD Productos</span>
-                                            </Link>
+                                            </button>
                                         </>
                                     )}
 
@@ -463,20 +495,20 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                             ) : (
                                 // Usuario no logueado
                                 <>
-                                    <Link href='/' className={getBtnStyle('/')}>
+                                    <button onClick={() => router.push('/')} className={getNavBtnStyle('/')}>
                                         <ShoppingBag size={18} />
                                         <span className="text-xs font-bold">Tienda</span>
-                                    </Link>
+                                    </button>
 
-                                    <Link href='/pisos' className={getBtnStyle('/pisos')}>
+                                    <button onClick={() => router.push('/pisos')} className={getNavBtnStyle('/pisos')}>
                                         <Grid size={18} />
                                         <span className="text-xs font-bold">Pisos</span>
-                                    </Link>
+                                    </button>
 
-                                    <Link href='/ofertas' className={getBtnStyle('/ofertas')}>
+                                    <button onClick={() => router.push('/ofertas')} className={getNavBtnStyle('/ofertas')}>
                                         <Tag size={18} />
                                         <span className="text-xs font-bold">Ofertas</span>
-                                    </Link>
+                                    </button>
 
                                     <Link href='/login' className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-yellow-400 bg-yellow-400 text-blue-900 font-bold hover:bg-yellow-300 transition-all shadow-lg">
                                         <User size={18} />
@@ -488,7 +520,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                     </div>
                 </div>
 
-                {/* DESKTOP: Buscador dentro del header sticky */}
+                {/* DESKTOP: Buscador */}
                 {setSearchTerm && (
                     <div className='hidden md:block'>
                         {renderSearchBar()}
@@ -496,7 +528,7 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
                 )}
             </header>
 
-            {/* MÓVIL: Buscador sticky independiente */}
+            {/* MÓVIL: Buscador sticky */}
             {setSearchTerm && (
                 <div className='md:hidden sticky top-0 z-40'>
                     {renderSearchBar()}

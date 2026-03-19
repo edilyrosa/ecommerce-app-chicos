@@ -43,7 +43,8 @@ export async function POST(request) { //Realmente es un GET, pero usamos POST po
     const token = crearToken({
       id: user.id,
       email: user.email,
-      nombre: user.nombre
+      nombre: user.nombre,
+      is_admin: user.is_admin || false  // ← AGREGADO
     });
 
   //?💡El servidor responde enviando ese token al navegador, para no le pide que inicie sesión otra vez. 
@@ -52,7 +53,8 @@ export async function POST(request) { //Realmente es un GET, pero usamos POST po
       user: {
         id: user.id,
         email: user.email,
-        nombre: user.nombre
+        nombre: user.nombre, 
+        is_admin: user.is_admin || false  // ← AGREGADO
       }
     });
   } catch (error) {

@@ -16,9 +16,9 @@ export default function TablaItems({
 
   // Función para obtener la primera imagen
   const getPrimeraImagen = (imagen_url) => {
-    if (!imagen_url) return '/placeholder.jpg';
+    if (!imagen_url) return '/bodega-img.jpg';
     const imagenes = imagen_url.split(',').map(img => img.trim()).filter(Boolean);
-    return imagenes[0] || '/placeholder.jpg';
+    return imagenes[0] || '/bodega-img.jpg';
   };
 
   const handleAjustar = async (carritoId, delta) => {
