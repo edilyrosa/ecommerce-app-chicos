@@ -6,6 +6,7 @@ import { useAuth } from '@/context/authContext';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import BottomNav from "../../components/BottomNav"
 
 const estados = ['Procesando pedido', 'Pedido Programado', 'Pedido en Reparto', 'Entregado'];
 
@@ -16,6 +17,8 @@ export default function ActualizarPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [buscado, setBuscado] = useState(false);
+
+  const [category, setCategory] = useState('todas')
 
   // Verificar que el usuario es admin (solo por email, para la demo)
   // Si no es admin, redirigir (aunque el enlace solo aparece para admin)
@@ -156,6 +159,8 @@ export default function ActualizarPedidos() {
           </div>
         )}
       </main>
+
+         <BottomNav setCategory={setCategory} currentCategory={category} />
     </div>
   );
 }

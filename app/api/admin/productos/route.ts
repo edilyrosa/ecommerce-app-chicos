@@ -4,7 +4,6 @@
 // import { supabase } from '@/lib/supabase';
 
 // export async function GET(request) {
-//   // Verificar que sea admin
 //   const adminCheck = await verificarAdmin(request);
 //   if (!adminCheck.authorized) {
 //     return adminCheck.response;
@@ -27,6 +26,7 @@
 //     );
 //   }
 // }
+
 
 
 import { NextResponse } from 'next/server';
