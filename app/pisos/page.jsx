@@ -96,8 +96,8 @@ export default function PisosPage() {
 
       <main className='container mx-auto px-3 md:px-6'>
         <div className='mb-6'>
-          <h1 className='text-2xl md:text-4xl font-black text-gray-800 mb-4'>
-            Pisos y Azulejos
+          <h1 className='text-2xl text-center md:text-4xl font-black text-gray-800 mb-4'>
+            Pisos, Azulejos y Fachadas.
           </h1>
 
           <div className='flex flex-wrap gap-3 mb-4'>
