@@ -135,8 +135,6 @@ export default function PromoBanner() {
                         <img
                             src={banner.image}
                             alt={banner.alt}
-                            fill
-                            priority={index === 0}
                             className="object-cover mx-auto"
                         />
                     </div>

@@ -1,3 +1,6 @@
+
+
+
 // app/components/Header.jsx
 'use client'
 import { Edit2, Save, Grid, ShoppingCart, User, ShoppingBag, ChevronDown, LayoutGrid, Search, LogOut, Tag, MessageCircle, Settings } from 'lucide-react'
@@ -13,12 +16,15 @@ export default function Header({ searchTerm, setSearchTerm, setCategory, current
     const [showMenu, setShowMenu] = useState(false);
     const [showAdminMenu, setShowAdminMenu] = useState(false); // Para móvil
 
+    // Categorías reales de la base de datos
     const categorias = [
         { id: 'todas',      label: 'Todas' },
-        { id: 'hogar',      label: 'Hogar' },
-        { id: 'ferreteria', label: 'Ferretería' },
-        { id: 'jardineria', label: 'Jardinería' },
-        { id: 'baños',      label: 'Baños' }
+        { id: 'pisos',      label: 'Pisos' },
+        { id: 'adhesivos',  label: 'Adhesivos' },
+        { id: 'fachaletas', label: 'Fachaletas' },
+        { id: 'decorados',  label: 'Decorados' },
+        { id: 'baños y accesorios', label: 'Baños y Accesorios' },
+        { id: 'grifería',   label: 'Grifería' }
     ];
 
     const handleCategorySelect = (id) => {
