@@ -311,7 +311,7 @@ export default function PisoDetailPage() {
     setCajasNecesarias(cajas)
 
     const cantJ = Math.ceil(area / 12)
-    const cantP = Math.ceil(area / 4)
+    const cantP = Math.ceil(area / 2.5)
     setCantidadJunteador(String(cantJ))
     setCantidadPegamento(String(cantP))
 
@@ -350,7 +350,7 @@ export default function PisoDetailPage() {
 
     // Recomendaciones de pegamento y junteador
     const cantJ = Math.ceil(areaTotalM2 / 12)
-    const cantP = Math.ceil(areaTotalM2 / 4)
+    const cantP = Math.ceil(areaTotalM2 / 2.5)
     setCantidadJunteador(String(cantJ))
     setCantidadPegamento(String(cantP))
 
@@ -914,7 +914,7 @@ export default function PisoDetailPage() {
                       <div className='bg-white rounded-xl p-4 border border-gray-200 shadow-sm overflow-hidden'>
                         <h4 className='text-sm font-bold text-gray-800 mb-2'>Complementa con Pegamento</h4>
                         <p className='text-xs text-gray-600 mb-3'>
-                          Recomendado: <span className='font-bold text-blue-900'>{cantidadPegamento}</span> unidad{cantidadPegamento !== '1' ? 'es' : ''} (1 por cada 4 m²)
+                          Recomendado: <span className='font-bold text-blue-900'>{cantidadPegamento}</span> unidad{cantidadPegamento !== '1' ? 'es' : ''} (1 por cada 2.5 m²)
                         </p>
                         <Carrusel 
                           items={productosPegamentoSugeridos} 
@@ -1265,7 +1265,7 @@ export default function PisoDetailPage() {
                       <div className='bg-white rounded-xl p-4 border border-gray-200 shadow-sm overflow-hidden'>
                         <h4 className='text-sm font-bold text-gray-800 mb-2'>Complementa con Pegamento</h4>
                         <p className='text-xs text-gray-600 mb-3'>
-                          Recomendado: <span className='font-bold text-blue-900'>{cantidadPegamento}</span> unidad{cantidadPegamento !== '1' ? 'es' : ''} (1 por cada 4 m²)
+                          Recomendado: <span className='font-bold text-blue-900'>{cantidadPegamento}</span> unidad{cantidadPegamento !== '1' ? 'es' : ''} (1 por cada 2.5 m²)
                         </p>
                         <Carrusel 
                           items={productosPegamentoSugeridos} 
