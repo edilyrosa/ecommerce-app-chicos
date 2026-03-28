@@ -1,6 +1,3 @@
-
-
-// app/pisos/[id]/page.jsx
 'use client'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -9,7 +6,7 @@ import BottomNav from '@/components/BottomNav'
 import { 
   ShoppingCart, X, ChevronLeft, ChevronRight,
   Calculator, MessageCircle, Package, AlertTriangle, Home,
-  Bath, ShowerHead, Bed, Sofa, UtensilsCrossed, Warehouse, Trees, Loader2
+  Bath, ShowerHead, Bed, Sofa, UtensilsCrossed, Warehouse, Trees
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Cookies from 'js-cookie'
@@ -121,7 +118,12 @@ const Carrusel = ({ items, size = 'small', onItemClick }) => {
   )
 }
 
-const LINEAS_CERAMICAS = ['Pisos', 'Azulejos', 'Decorados']
+// Líneas que deben mostrar la calculadora de área (pisos y azulejos)
+const LINEAS_CERAMICAS = ['pisos', 'azulejos']
+// Líneas que se consideran "decorados lineales" (listeles y cenefas)
+const LINEAS_DECORADO_LINEAL = ['listeles', 'cenefas']
+// Líneas de adhesivos y complementos
+const LINEAS_ADHESIVOS = ['pegamentos', 'junteadores', 'complementos']
 
 export default function PisoDetailPage() {
   const params = useParams()
@@ -133,18 +135,26 @@ export default function PisoDetailPage() {
   const [currentImg, setCurrentImg] = useState(0)
   const [showImageModal, setShowImageModal] = useState(false)
 
+  // Estados calculadora para pisos/azulejos
   const [ancho, setAncho] = useState('')
   const [largo, setLargo] = useState('')
   const [incluirExtra, setIncluirExtra] = useState(true)
   const [cajasNecesarias, setCajasNecesarias] = useState(null)
   const [areaTotal, setAreaTotal] = useState(null)
 
+  // Cantidad simple para productos no cerámicos
   const [cantidadSimple, setCantidadSimple] = useState('1')
 
+  // Estados para decorados lineales (listeles/cenefas)
+  const [anchoMuro, setAnchoMuro] = useState('')
+  const [piezasDecoradoNecesarias, setPiezasDecoradoNecesarias] = useState(null)
+  const [areaDecoradoTotal, setAreaDecoradoTotal] = useState(null)
+
+  // Estados para complementos (junteador y pegamento)
   const [productosJunteador, setProductosJunteador] = useState([])
-  const [productosPegamento, setProductosPegamento] = useState([]) // Todos los pegamentos
-  const [productosPegamentoSugeridos, setProductosPegamentoSugeridos] = useState([]) // Solo los sugeridos según códigos
-  const [productosJunteadorSugeridos, setProductosJunteadorSugeridos] = useState([]) // Solo los sugeridos según códigos
+  const [productosPegamento, setProductosPegamento] = useState([])
+  const [productosPegamentoSugeridos, setProductosPegamentoSugeridos] = useState([])
+  const [productosJunteadorSugeridos, setProductosJunteadorSugeridos] = useState([])
   const [mostrarOpcionesJunteador, setMostrarOpcionesJunteador] = useState(false)
   const [mostrarOpcionesPegamento, setMostrarOpcionesPegamento] = useState(false)
   const [junteadorSeleccionado, setJunteadorSeleccionado] = useState(null)
@@ -153,24 +163,18 @@ export default function PisoDetailPage() {
   const [cantidadPegamento, setCantidadPegamento] = useState('0')
   const [colorSeleccionado, setColorSeleccionado] = useState('')
 
-  const [productosSugeridos, setProductosSugeridos] = useState([])
-
-  const [anchoMuro, setAnchoMuro] = useState('')
-  const [piezasDecoradoNecesarias, setPiezasDecoradoNecesarias] = useState(null)
-  const [cajasDecoradoNecesarias, setCajasDecoradoNecesarias] = useState(null)
+  // Productos relacionados (carrusel inferior)
+  const [productosRelacionados, setProductosRelacionados] = useState([])
 
   const [addingToCart, setAddingToCart] = useState(false)
 
-  // Filtrado final de junteadores (sugeridos + regla de cuerpo porcelánico)
+  // Filtrado de junteadores según la regla de cuerpo porcelánico
   const productosJunteadorFiltrados = useMemo(() => {
     if (!producto) return [];
     if (productosJunteadorSugeridos.length === 0) return [];
-    
-    // Si es Pisos o Azulejos con cuerpo Porcelánico, mostrar solo 'Sin arena'
-    if ((producto.linea === 'Pisos' || producto.linea === 'Azulejos') && producto.cuerpo === 'Porcelánico') {
+    if ((producto.linea === 'pisos' || producto.linea === 'azulejos') && producto.cuerpo === 'Porcelánico') {
       return productosJunteadorSugeridos.filter(j => j.acabado === 'Sin arena');
     }
-    // En cualquier otro caso, mostrar todos los sugeridos
     return productosJunteadorSugeridos;
   }, [producto, productosJunteadorSugeridos]);
 
@@ -183,22 +187,17 @@ export default function PisoDetailPage() {
   useEffect(() => {
     if (producto) {
       fetchProductosComplementarios()
-      fetchProductosSugeridos()
+      fetchProductosRelacionados()
     }
   }, [producto])
 
-  // Filtrado de pegamentos según el campo pegamento_sugerido
   useEffect(() => {
     if (producto && productosPegamento.length > 0) {
       const codigosSugeridos = producto.pegamento_sugerido
         ? producto.pegamento_sugerido.split(',').map(c => c.trim()).filter(Boolean)
         : [];
-      
       if (codigosSugeridos.length > 0) {
-        const filtrados = productosPegamento.filter(p => 
-          codigosSugeridos.includes(p.codigo)
-        );
-        setProductosPegamentoSugeridos(filtrados);
+        setProductosPegamentoSugeridos(productosPegamento.filter(p => codigosSugeridos.includes(p.codigo)));
       } else {
         setProductosPegamentoSugeridos([]);
       }
@@ -207,18 +206,13 @@ export default function PisoDetailPage() {
     }
   }, [producto, productosPegamento]);
 
-  // Filtrado de junteadores según el campo junteador_sugerido
   useEffect(() => {
     if (producto && productosJunteador.length > 0) {
       const codigosSugeridos = producto.junteador_sugerido
         ? producto.junteador_sugerido.split(',').map(c => c.trim()).filter(Boolean)
         : [];
-      
       if (codigosSugeridos.length > 0) {
-        const filtrados = productosJunteador.filter(p => 
-          codigosSugeridos.includes(p.codigo)
-        );
-        setProductosJunteadorSugeridos(filtrados);
+        setProductosJunteadorSugeridos(productosJunteador.filter(p => codigosSugeridos.includes(p.codigo)));
       } else {
         setProductosJunteadorSugeridos([]);
       }
@@ -246,8 +240,8 @@ export default function PisoDetailPage() {
   const fetchProductosComplementarios = async () => {
     try {
       const [resJ, resP] = await Promise.all([
-        fetch('/api/productos?linea=Junteador'),
-        fetch('/api/productos?linea=Pegamentos')
+        fetch('/api/productos?linea=junteadores'),
+        fetch('/api/productos?linea=pegamentos')
       ])
       if (resJ.ok) {
         const data = await resJ.json()
@@ -262,37 +256,38 @@ export default function PisoDetailPage() {
     }
   }
 
-  const fetchProductosSugeridos = async () => {
+  const fetchProductosRelacionados = async () => {
     if (!producto) return
-    const lineaActual = producto.linea
-    let lineas = []
-    if (lineaActual === 'Pisos' || lineaActual === 'Azulejos') {
-      lineas = ['Decorados']
-    } else if (lineaActual === 'Decorados') {
-      lineas = ['Pisos', 'Azulejos', 'Pegamentos', 'Junteador', 'Decorados']
-    } else if (lineaActual === 'Pegamentos' || lineaActual === 'Junteador') {
-      lineas = ['Pisos', 'Azulejos', 'Decorados', 'Pegamentos', 'Junteador']
+    const linea = producto.linea
+    // Definir grupos
+    const grupoPisosAzulejosListelesCenefas = ['pisos', 'azulejos', 'listeles', 'cenefas']
+    const grupoAdhesivos = ['pegamentos', 'junteadores', 'complementos']
+
+    let lineasQuery = []
+    if (grupoPisosAzulejosListelesCenefas.includes(linea)) {
+      lineasQuery = grupoAdhesivos
+    } else if (grupoAdhesivos.includes(linea)) {
+      lineasQuery = grupoPisosAzulejosListelesCenefas
     } else {
-      return
+      // Fallback: mostrar todos los productos de los dos grupos
+      lineasQuery = [...grupoPisosAzulejosListelesCenefas, ...grupoAdhesivos]
     }
+
     try {
-      const promises = lineas.map(linea => fetch(`/api/productos?linea=${linea}`))
+      const promises = lineasQuery.map(l => fetch(`/api/productos?linea=${l}`))
       const responses = await Promise.all(promises)
       const dataArrays = await Promise.all(responses.map(r => r.json()))
       const combined = dataArrays.flat()
       const unique = Array.from(new Map(combined.map(p => [p.id, p])).values())
-      setProductosSugeridos(unique)
+      setProductosRelacionados(unique)
     } catch (error) {
-      console.error('Error al cargar productos sugeridos:', error)
+      console.error('Error al cargar productos relacionados:', error)
     }
   }
 
   const esCeramico = producto?.linea && LINEAS_CERAMICAS.includes(producto.linea)
-
-  const esDecoradoLineal = producto?.linea === 'Decorados' && 
-    (producto.acabado === 'Ceramico' || producto.acabado === 'Flecha')
-
-  const esDecoradoMalla = producto?.linea === 'Decorados' && producto.acabado === 'Malla'
+  const esDecoradoLineal = producto?.linea && LINEAS_DECORADO_LINEAL.includes(producto.linea)
+  const esAdhesivo = producto?.linea && LINEAS_ADHESIVOS.includes(producto.linea)
 
   const calcularCajas = () => {
     const anchoNum = parseFloat(ancho)
@@ -323,35 +318,41 @@ export default function PisoDetailPage() {
     toast.success(`📦 Necesitas ${cajas} caja${cajas !== 1 ? 's' : ''}`)
   }
 
-  const calcularDecorados = () => {
+  const calcularDecoradosLineales = () => {
     const anchoMuroNum = parseFloat(anchoMuro)
     if (!anchoMuroNum || anchoMuroNum <= 0) {
       toast.error('Ingresa un ancho de muro válido mayor a 0')
       return
     }
 
+    // Extraer anchura de la pieza desde el formato (ALTOxANCHO)
     const formato = producto.formato || ''
-    const match = formato.match(/(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)/i)
+    const match = formato.match(/(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)/)
     if (!match) {
-      toast.error('No se pudo determinar el largo de la pieza desde el formato')
+      toast.error('No se pudo determinar el ancho de la pieza desde el formato')
       return
     }
-    const largoPiezaCm = parseFloat(match[2])
-    if (isNaN(largoPiezaCm) || largoPiezaCm <= 0) {
-      toast.error('Largo de pieza inválido')
+    const anchoPiezaCm = parseFloat(match[2]) // segundo número (ancho)
+    if (isNaN(anchoPiezaCm) || anchoPiezaCm <= 0) {
+      toast.error('Ancho de pieza inválido')
       return
     }
 
     const anchoMuroCm = anchoMuroNum * 100
-    const piezas = Math.ceil(anchoMuroCm / largoPiezaCm)
+    const piezas = Math.ceil(anchoMuroCm / anchoPiezaCm)
     setPiezasDecoradoNecesarias(piezas)
 
-    if (producto.piezas_por_caja && producto.piezas_por_caja > 0) {
-      const cajas = Math.ceil(piezas / producto.piezas_por_caja)
-      setCajasDecoradoNecesarias(cajas)
-    } else {
-      setCajasDecoradoNecesarias(null)
-    }
+    // Calcular área total en m² para estimar complementos
+    const altoPiezaCm = parseFloat(match[1]) // primer número (alto)
+    const areaPiezaM2 = (altoPiezaCm * anchoPiezaCm) / 10000
+    const areaTotalM2 = areaPiezaM2 * piezas
+    setAreaDecoradoTotal(areaTotalM2)
+
+    // Recomendaciones de pegamento y junteador
+    const cantJ = Math.ceil(areaTotalM2 / 12)
+    const cantP = Math.ceil(areaTotalM2 / 4)
+    setCantidadJunteador(String(cantJ))
+    setCantidadPegamento(String(cantP))
 
     toast.success(`📏 Necesitas ${piezas} pieza${piezas !== 1 ? 's' : ''}`)
   }
@@ -411,7 +412,7 @@ export default function PisoDetailPage() {
       return
     }
 
-    let cantidad = cajasDecoradoNecesarias || piezasDecoradoNecesarias
+    let cantidad = piezasDecoradoNecesarias
     if (!cantidad || cantidad <= 0) {
       toast.error('Primero calcula la cantidad necesaria')
       return
@@ -453,7 +454,7 @@ export default function PisoDetailPage() {
     }
   }
 
-  const handleAddComplemento = async (producto, cantidad, color = '') => {
+  const handleAddComplemento = async (producto, cantidad) => {
     if (!user) {
       toast.error('Inicia sesión para comprar')
       router.push('/login')
@@ -550,7 +551,7 @@ export default function PisoDetailPage() {
     window.open(`https://wa.me/${numeroWhatsApp}?text=${mensaje}`, '_blank')
   }
 
-  // Verificaciones de stock para los diferentes bloques
+  // Verificaciones de stock
   const stockInsuficiente = cajasNecesarias && cajasNecesarias > producto?.stock
   const stockInsuficienteSimple = cantidadSimple !== '' && parseInt(cantidadSimple) > producto?.stock
   const stockInsuficienteJunteador = junteadorSeleccionado && cantidadJunteador && parseInt(cantidadJunteador) > junteadorSeleccionado.stock
@@ -560,9 +561,9 @@ export default function PisoDetailPage() {
     return (
       <div className='min-h-screen bg-gray-50 pb-20 md:pb-8'>
         <Header />
-        <main className='container mx-auto px-3 md:px-6 py-4 md:py-6 max-w-7xl'>
-          <div className='h-6 w-32 bg-gradient-to-r from-blue-100 to-yellow-100 rounded animate-pulse mb-4' />
+        <main className='container mx-auto px-3 md:px-6 py-4 md:py-6'>
           <div className='grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6'>
+            {/* skeleton similar al original */}
             <div className='space-y-4'>
               <div className='bg-gradient-to-br from-blue-100 to-yellow-50 h-64 md:h-96 rounded-2xl animate-pulse border-2 border-gray-200' />
               <div className='flex gap-2'>
@@ -570,7 +571,6 @@ export default function PisoDetailPage() {
                   <div key={i} className='w-16 h-16 bg-gradient-to-br from-blue-100 to-yellow-50 rounded-lg animate-pulse border border-gray-200' />
                 ))}
               </div>
-              <div className='bg-gradient-to-br from-blue-100 to-yellow-50 h-48 rounded-2xl animate-pulse border-2 border-gray-200' />
             </div>
             <div className='space-y-4'>
               <div className='h-8 w-48 bg-gradient-to-r from-blue-100 to-yellow-100 rounded animate-pulse' />
@@ -592,18 +592,37 @@ export default function PisoDetailPage() {
     ? (Array.isArray(producto.imagen_url) ? producto.imagen_url : producto.imagen_url.split(',').map(img => img.trim()).filter(Boolean))
     : ['/bodega-img.jpg']
 
+  // Determinar etiqueta de precio
+  let precioLabel = ''
+  if (producto.linea === 'pisos'  || producto.linea === 'azulejos' || producto.linea === 'piedras' ) {
+    precioLabel = 'Precio por caja'
+  } else if (producto.linea === 'pegamentos' || producto.linea === 'junteadores' || producto.linea === 'complementos') {
+    precioLabel = 'Precio del producto'
+  } else {
+    precioLabel = 'Precio por pieza'
+  }
+
+  // Indicador para mostrar m²/caja (solo pisos y azulejos)
+  const mostrarPrecioPorCaja = producto.linea === 'pisos' || producto.linea === 'azulejos'
+
+  // Determinar si mostrar especificaciones técnicas
+  const mostrarEspecificaciones = esCeramico || esDecoradoLineal || esAdhesivo
+
+  // Descuento real solo si precio_anterior > precio
+  const tieneDescuento = producto.precio_anterior && producto.precio_anterior > producto.precio
+
   return (
     <div className='min-h-screen bg-gray-50 pb-20 md:pb-8 overflow-x-hidden' style={{ backgroundColor: '#f8fafc' }}>
       <Header />
 
-      <main className='w-full mx-auto px-3 md:px-6 py-4 md:py-6 max-w-7xl'>
+      <main className='w-full mx-auto px-3 md:px-6 py-4 md:py-6 max-w-[1400px]'>
         <nav className='flex items-center gap-2 text-xs md:text-sm text-gray-500 mb-4 md:mb-6 overflow-hidden'>
           <button onClick={() => router.push('/pisos')} className='hover:text-yellow-400 transition flex-shrink-0'>
-            {esCeramico ? 'Pisos' : 'Productos'}
+            {esCeramico || esDecoradoLineal ? 'Pisos' : 'Productos'}
           </button>
           <span className='flex-shrink-0'>/</span>
           <span className='font-semibold truncate' style={{ color: '#00162f' }}>
-            {producto.nombre_completo || producto.nombre}
+            {producto.nombre_comercial || producto.nombre}
           </span>
         </nav>
 
@@ -616,7 +635,7 @@ export default function PisoDetailPage() {
               <div className='w-full aspect-square'>
                 <img
                   src={imagenes[currentImg]}
-                  alt={producto.nombre_completo || producto.nombre}
+                  alt={producto.nombre_comercial || producto.nombre}
                   className='w-full h-full object-contain cursor-zoom-in'
                   onClick={() => setShowImageModal(true)}
                 />
@@ -656,14 +675,33 @@ export default function PisoDetailPage() {
               </div>
             )}
 
-            {/* Especificaciones Técnicas */}
-            {esCeramico && (
+            {/* Especificaciones Técnicas (solo si corresponde) */}
+            {mostrarEspecificaciones && (
               <div className='bg-gray-200 rounded-2xl p-4 shadow-sm border border-gray-100 w-full overflow-hidden'>
                 <h2 className='text-center text-lg lg:text-xl font-black mb-2' style={{ color: '#00162f' }}>
                   Especificaciones Técnicas
                 </h2>
                 
-                {producto.linea === 'Decorados' ? (
+                {producto.linea === 'pisos' || producto.linea === 'azulejos' ? (
+                  // Para pisos/azulejos
+                  <div className='grid grid-cols-2 lg:grid-cols-3 gap-10'>
+                    {[
+                      { label: 'Cuerpo', value: producto.cuerpo },
+                      { label: 'Resistencia (PEI)', value: producto.pei },
+                      { label: 'Formato', value: producto.formato },
+                      { label: 'Acabado', value: producto.acabado },
+                      { label: 'm² x Caja', value: producto.m2_por_caja },
+                    ].map((item, i) => (
+                      <div key={i} className='flex flex-col sm:flex-row sm:justify-between items-start sm:items-center py-2 lg:py-2.5 border-b border-gray-50 min-w-0'>
+                        <span className='text-xs text-gray-500 font-medium truncate'>{item.label}</span>
+                        <span className='text-xs font-bold truncate' style={{ color: '#00162f' }}>
+                          {item.value || 'N/A'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : producto.linea === 'listeles' || producto.linea === 'cenefas' ? (
+                  // Para listeles/cenefas
                   <div className='grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4'>
                     {producto.coleccion && (
                       <div className='flex flex-col items-center p-2 bg-white rounded-lg min-w-0'>
@@ -684,35 +722,42 @@ export default function PisoDetailPage() {
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className='grid grid-cols-2 lg:grid-cols-3 gap-10'>
-                    {[
-                      { label: 'Cuerpo', value: producto.cuerpo },
-                      { label: 'Resistencia (PEI)', value: producto.pei },
-                      { label: 'Formato', value: producto.formato },
-                      { label: 'Acabado', value: producto.acabado },
-                      { label: 'm² x Caja', value: producto.m2_por_caja },
-                    ].map((item, i) => (
-                      <div key={i} className='flex flex-col sm:flex-row sm:justify-between items-start sm:items-center py-2 lg:py-2.5 border-b border-gray-50 min-w-0'>
-                        <span className='text-xs text-gray-500 font-medium truncate'>{item.label}</span>
-                        <span className='text-xs font-bold truncate' style={{ color: '#00162f' }}>
-                          {item.value || 'N/A'}
-                        </span>
-                      </div>
-                    ))}
+                ) : producto.linea === 'pegamentos' ? (
+                  // Para pegamentos
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                    <div className='flex flex-col items-center p-2 bg-white rounded-lg min-w-0'>
+                      <span className='text-[8px] uppercase text-gray-500 truncate w-full text-center'>Tipo de Pegamento</span>
+                      <span className='text-xs font-bold text-blue-900 text-center truncate w-full'>{producto.coleccion || 'N/A'}</span>
+                    </div>
+                    <div className='flex flex-col items-center p-2 bg-white rounded-lg min-w-0'>
+                      <span className='text-[8px] uppercase text-gray-500 truncate w-full text-center'>Formato</span>
+                      <span className='text-xs font-bold text-blue-900 text-center truncate w-full'>{producto.formato || 'N/A'}</span>
+                    </div>
                   </div>
-                )}
+                ) : producto.linea === 'junteadores' ? (
+                  // Para junteadores
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                    <div className='flex flex-col items-center p-2 bg-white rounded-lg min-w-0'>
+                      <span className='text-[8px] uppercase text-gray-500 truncate w-full text-center'>Acabado</span>
+                      <span className='text-xs font-bold text-blue-900 text-center truncate w-full'>{producto.acabado || 'N/A'}</span>
+                    </div>
+                    <div className='flex flex-col items-center p-2 bg-white rounded-lg min-w-0'>
+                      <span className='text-[8px] uppercase text-gray-500 truncate w-full text-center'>Formato</span>
+                      <span className='text-xs font-bold text-blue-900 text-center truncate w-full'>{producto.formato || 'N/A'}</span>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
 
-            {/* Carrusel de productos sugeridos */}
-            {productosSugeridos.length > 0 && (
+            {/* Carrusel de productos relacionados */}
+            {productosRelacionados.length > 0 && (
               <div className='rounded-2xl p-4 shadow-sm border border-gray-100 bg-yellow-50 w-full overflow-hidden'>
                 <h2 className='text-center text-lg lg:text-xl font-black mb-4' style={{ color: '#00162f' }}>
-                  También te puede interesar
+                  Productos relacionados
                 </h2>
                 <Carrusel 
-                  items={productosSugeridos} 
+                  items={productosRelacionados} 
                   size='large' 
                   onItemClick={(item) => router.push(`/pisos/${item.id}`)} 
                 />
@@ -729,7 +774,7 @@ export default function PisoDetailPage() {
             )}
 
             <h1 className='text-xl md:text-3xl lg:text-2xl font-black leading-tight break-words' style={{ color: '#00162f' }}>
-              {producto.nombre_completo || producto.nombre}
+              {producto.nombre_comercial || producto.nombre}
             </h1>
 
             {producto.descripcion && (
@@ -738,68 +783,25 @@ export default function PisoDetailPage() {
               </p>
             )}
 
-            {producto.uso && producto.uso.length > 0 && (
-              <div className='block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 overflow-hidden'>
-                <div className='flex items-center gap-3 p-2 border-b border-gray-100 flex-wrap'>
-                  <h2 className='text-lg font-black text-gray-500 flex-shrink-0'>Áreas de Uso</h2>
-                  {(() => {
-                    const iconMap = {
-                      'Interior': <Home className="w-5 h-5" />,
-                      'Baño': <Bath className="w-5 h-5" />,
-                      'Cocina': <UtensilsCrossed className="w-5 h-5" />,
-                      'Recámara': <Bed className="w-5 h-5" />,
-                      'Sala': <Sofa className="w-5 h-5" />,
-                      'Exterior': <Trees className="w-5 h-5" />,
-                      'Comercial': <Warehouse className="w-5 h-5" />
-                    }
-                    const usedAreas = producto.uso || []
-                    const icons = usedAreas.map(area => iconMap[area]).filter(Boolean)
-                    if (icons.length === 0) {
-                      return [
-                        <Bath key="bath" className="w-5 h-5" />,
-                        <ShowerHead key="shower" className="w-5 h-5" />,
-                        <Bed key="bed" className="w-5 h-5" />,
-                        <Sofa key="sofa" className="w-5 h-5" />,
-                        <UtensilsCrossed key="kitchen" className="w-5 h-5" />,
-                        <Home key="home" className="w-5 h-5" />
-                      ].map((icon, idx) => (
-                        <div key={idx} className='text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0'>
-                          {icon}
-                        </div>
-                      ))
-                    }
-                    return icons.map((icon, idx) => (
-                      <div key={idx} className='text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0'>
-                        {icon}
-                      </div>
-                    ))
-                  })()}
-                </div>
-              </div>
-            )}
-
             <div className='bg-white rounded-xl p-3 lg:p-4 border border-gray-100 shadow-sm overflow-hidden'>
               <div className='flex items-baseline gap-2 flex-wrap'>
                 <span className='text-2xl lg:text-3xl font-black' style={{ color: '#00162f' }}>
                   ${Number(producto.precio).toFixed(2)}
                 </span>
-                {producto.precio_anterior && (
+                {tieneDescuento && (
                   <span className='text-sm text-gray-400 line-through'>
                     ${Number(producto.precio_anterior).toFixed(2)}
                   </span>
                 )}
               </div>
-              {esCeramico && !esDecoradoLineal && !esDecoradoMalla ? (
-                <p className='text-[10px] lg:text-xs text-gray-500 truncate'>
-                  {producto.m2_por_caja} m²/caja • {producto.piezas_por_caja} pzs
-                </p>
-              ) : (
-                <p className='text-[10px] lg:text-xs text-gray-500'>Precio por pieza</p>
-              )}
+              <p className='text-[10px] lg:text-xs text-gray-500 truncate'>
+                {precioLabel}
+                {mostrarPrecioPorCaja && producto.m2_por_caja && ` • ${producto.m2_por_caja} m²/caja`}
+              </p>
             </div>
 
-            {/* Atributos rápidos */}
-            {esCeramico && !esDecoradoLineal && !esDecoradoMalla && (
+            {/* Atributos rápidos para pisos/azulejos (solo se muestran si hay calculadora) */}
+            {(esCeramico || esDecoradoLineal) && (
               <div className='grid grid-cols-3 gap-2 overflow-hidden'>
                 {[
                   { label: 'Formato', value: producto.formato },
@@ -820,6 +822,7 @@ export default function PisoDetailPage() {
 
             {/* BLOQUE DE ACCIÓN */}
             {esDecoradoLineal ? (
+              // Calculadora para listeles/cenefas
               <div className='rounded-xl p-3 lg:p-4 border-2 overflow-hidden' style={{ backgroundColor: '#00162f', borderColor: '#00162f' }}>
                 <div className='flex items-center gap-2 mb-3'>
                   <div className='bg-yellow-400 p-1.5 rounded-lg flex-shrink-0'>
@@ -845,7 +848,7 @@ export default function PisoDetailPage() {
                     />
                   </div>
                   <button
-                    onClick={calcularDecorados}
+                    onClick={calcularDecoradosLineales}
                     disabled={!anchoMuro}
                     className='w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-700 py-2 rounded-lg font-black text-xs lg:text-sm transition-all active:scale-95 flex items-center justify-center gap-2'
                     style={{ color: '#00162f' }}
@@ -872,11 +875,6 @@ export default function PisoDetailPage() {
                           </p>
                         </div>
                       </div>
-                      {cajasDecoradoNecesarias && (
-                        <p className='text-xs text-gray-600 mb-2 truncate'>
-                          Equivale a {cajasDecoradoNecesarias} caja{cajasDecoradoNecesarias !== 1 ? 's' : ''}
-                        </p>
-                      )}
                       {producto.stock >= piezasDecoradoNecesarias ? (
                         <button
                           onClick={handleAddDecoradoToCart}
@@ -885,7 +883,7 @@ export default function PisoDetailPage() {
                           style={{ color: '#00162f' }}
                         >
                           <ShoppingCart className='w-4 h-4 flex-shrink-0' />
-                          <span className='truncate'>{addingToCart ? 'Agregando...' : `Agregar ${cajasDecoradoNecesarias || piezasDecoradoNecesarias}`}</span>
+                          <span className='truncate'>{addingToCart ? 'Agregando...' : `Agregar ${piezasDecoradoNecesarias}`}</span>
                         </button>
                       ) : (
                         <>
@@ -907,8 +905,228 @@ export default function PisoDetailPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Complementos (pegamento y junteador) para decorados lineales */}
+                {areaDecoradoTotal && (
+                  <div className='mt-6 space-y-6 overflow-hidden'>
+                    {/* PEGAMENTO */}
+                    {productosPegamentoSugeridos.length > 0 && (
+                      <div className='bg-white rounded-xl p-4 border border-gray-200 shadow-sm overflow-hidden'>
+                        <h4 className='text-sm font-bold text-gray-800 mb-2'>Complementa con Pegamento</h4>
+                        <p className='text-xs text-gray-600 mb-3'>
+                          Recomendado: <span className='font-bold text-blue-900'>{cantidadPegamento}</span> unidad{cantidadPegamento !== '1' ? 'es' : ''} (1 por cada 4 m²)
+                        </p>
+                        <Carrusel 
+                          items={productosPegamentoSugeridos} 
+                          size='small' 
+                          onItemClick={(item) => router.push(`/pisos/${item.id}`)} 
+                        />
+                        {!mostrarOpcionesPegamento ? (
+                          <button
+                            onClick={() => setMostrarOpcionesPegamento(true)}
+                            className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg text-xs transition mt-3'
+                          >
+                            Elegir Pegamento
+                          </button>
+                        ) : (
+                          <div className='space-y-3 mt-3 border-t pt-3'>
+                            <select
+                              className={`w-full p-2 border-2 rounded-lg text-sm transition-colors ${
+                                pegamentoSeleccionado ? 'border-green-500' : 'border-red-500'
+                              }`}
+                              value={pegamentoSeleccionado?.id?.toString() || ''}
+                              onChange={(e) => {
+                                const id = e.target.value;
+                                if (id) {
+                                  const prod = productosPegamentoSugeridos.find(p => p.id === Number(id));
+                                  setPegamentoSeleccionado(prod);
+                                } else {
+                                  setPegamentoSeleccionado(null);
+                                }
+                              }}
+                            >
+                              <option value=''>Selecciona tipo</option>
+                              {productosPegamentoSugeridos.map(p => (
+                                <option key={p.id} value={p.id.toString()}>
+                                  {p.acabado} {p.nombre}
+                                </option>
+                              ))}
+                            </select>
+
+                            {pegamentoSeleccionado && (
+                              <div className='flex items-center justify-between mb-2.5'>
+                                <div>
+                                  <p className='text-[9px] text-gray-500 mb-0.5'>Necesario</p>
+                                  <p className='text-2xl font-black flex items-center gap-1.5' style={{ color: '#00162f' }}>
+                                    <Package className="w-5 h-5" />
+                                    {cantidadPegamento}
+                                  </p>
+                                </div>
+                                <div className='text-right'>
+                                  <p className='text-[9px] text-gray-500 mb-0.5'>Stock</p>
+                                  <p className={`text-lg font-black ${
+                                    pegamentoSeleccionado.stock >= parseInt(cantidadPegamento) ? 'text-green-600' : 'text-red-600'
+                                  }`}>
+                                    {pegamentoSeleccionado.stock}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            <input
+                              type='text'
+                              inputMode='numeric'
+                              pattern='[0-9]*'
+                              value={cantidadPegamento}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                setCantidadPegamento(val);
+                              }}
+                              onBlur={() => {
+                                let num = parseInt(cantidadPegamento, 10);
+                                if (isNaN(num) || num < 1) num = 1;
+                                setCantidadPegamento(String(num));
+                              }}
+                              className='w-full p-2 border border-gray-300 rounded-lg text-sm'
+                            />
+
+                            {stockInsuficientePegamento ? (
+                              <>
+                                <button
+                                  onClick={() => handleWhatsApp(pegamentoSeleccionado.nombre, cantidadPegamento, pegamentoSeleccionado.stock, 'unidades')}
+                                  className='w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg text-sm mb-2'
+                                >
+                                  <MessageCircle className="w-4 h-4 inline mr-2" />
+                                  Consultar por WhatsApp
+                                </button>
+                                <p className='text-xs text-red-600 text-center'>Stock insuficiente. Contáctanos.</p>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => handleAddComplemento(pegamentoSeleccionado, cantidadPegamento)}
+                                disabled={!pegamentoSeleccionado || addingToCart}
+                                className='w-full bg-yellow-400 text-blue-900 font-bold py-2 rounded-lg text-sm hover:bg-yellow-500 disabled:bg-gray-300 transition'
+                              >
+                                Agregar al carrito
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* JUNTEADOR */}
+                    {productosJunteadorFiltrados.length > 0 && (
+                      <div className='bg-white rounded-xl p-4 border border-gray-200 shadow-sm overflow-hidden'>
+                        <h4 className='text-sm font-bold text-gray-800 mb-2'>Complementa con Junteador</h4>
+                        <p className='text-xs text-gray-600 mb-3'>
+                          Recomendado: <span className='font-bold text-blue-900'>{cantidadJunteador}</span> unidad{cantidadJunteador !== '1' ? 'es' : ''} (1 por cada 12 m²)
+                        </p>
+                        <Carrusel 
+                          items={productosJunteadorFiltrados} 
+                          size='small' 
+                          onItemClick={(item) => router.push(`/pisos/${item.id}`)} 
+                        />
+                        {!mostrarOpcionesJunteador ? (
+                          <button
+                            onClick={() => setMostrarOpcionesJunteador(true)}
+                            className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg text-xs transition mt-3'
+                          >
+                            Elegir Junteador
+                          </button>
+                        ) : (
+                          <div className='space-y-3 mt-3 border-t pt-3'>
+                            <select
+                              className={`w-full p-2 border-2 rounded-lg text-sm transition-colors ${
+                                junteadorSeleccionado ? 'border-green-500' : 'border-red-500'
+                              }`}
+                              value={junteadorSeleccionado?.id?.toString() || ''}
+                              onChange={(e) => {
+                                const id = e.target.value;
+                                if (id) {
+                                  const prod = productosJunteadorFiltrados.find(p => p.id === Number(id));
+                                  setJunteadorSeleccionado(prod);
+                                } else {
+                                  setJunteadorSeleccionado(null);
+                                }
+                                setColorSeleccionado('');
+                              }}
+                            >
+                              <option value=''>Selecciona tipo</option>
+                              {productosJunteadorFiltrados.map(p => (
+                                <option key={p.id} value={p.id.toString()}>
+                                  {p.acabado} {p.formato ? `- ${p.formato}` : ''}
+                                </option>
+                              ))}
+                            </select>
+
+                            {junteadorSeleccionado && (
+                              <div className='flex items-center justify-between mb-2.5'>
+                                <div>
+                                  <p className='text-[9px] text-gray-500 mb-0.5'>Necesario</p>
+                                  <p className='text-2xl font-black flex items-center gap-1.5' style={{ color: '#00162f' }}>
+                                    <Package className="w-5 h-5" />
+                                    {cantidadJunteador}
+                                  </p>
+                                </div>
+                                <div className='text-right'>
+                                  <p className='text-[9px] text-gray-500 mb-0.5'>Stock</p>
+                                  <p className={`text-lg font-black ${
+                                    junteadorSeleccionado.stock >= parseInt(cantidadJunteador) ? 'text-green-600' : 'text-red-600'
+                                  }`}>
+                                    {junteadorSeleccionado.stock}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            <input
+                              type='text'
+                              inputMode='numeric'
+                              pattern='[0-9]*'
+                              value={cantidadJunteador}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                setCantidadJunteador(val);
+                              }}
+                              onBlur={() => {
+                                let num = parseInt(cantidadJunteador, 10);
+                                if (isNaN(num) || num < 1) num = 1;
+                                setCantidadJunteador(String(num));
+                              }}
+                              className='w-full p-2 border border-gray-300 rounded-lg text-sm'
+                            />
+
+                            {stockInsuficienteJunteador ? (
+                              <>
+                                <button
+                                  onClick={() => handleWhatsApp(junteadorSeleccionado.nombre, cantidadJunteador, junteadorSeleccionado.stock, 'unidades')}
+                                  className='w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg text-sm mb-2'
+                                >
+                                  <MessageCircle className="w-4 h-4 inline mr-2" />
+                                  Consultar por WhatsApp
+                                </button>
+                                <p className='text-xs text-red-600 text-center'>
+                                  Stock insuficiente. Contáctanos.
+                                </p>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => handleAddComplemento(junteadorSeleccionado, cantidadJunteador)}
+                                disabled={!junteadorSeleccionado || addingToCart}
+                                className='w-full bg-yellow-400 text-blue-900 font-bold py-2 rounded-lg text-sm hover:bg-yellow-500 disabled:bg-gray-300 transition'
+                              >
+                                Agregar al carrito
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            ) : esCeramico && !esDecoradoMalla ? (
+            ) : esCeramico ? (
               // Calculadora para pisos/azulejos
               <div className='rounded-xl p-3 lg:p-4 border-2 overflow-hidden' style={{ backgroundColor: '#00162f', borderColor: '#00162f' }}>
                 <div className='flex items-center gap-2 mb-3'>
@@ -1039,11 +1257,10 @@ export default function PisoDetailPage() {
                   )}
                 </div>
 
-                {/* //* COMPLEMENTOS */}
+                {/* Complementos para pisos/azulejos */}
                 {areaTotal && (
                   <div className='mt-6 space-y-6 overflow-hidden'>
-                  
-                    {/* PEGAMENTO sugerido */}
+                    {/* PEGAMENTO */}
                     {productosPegamentoSugeridos.length > 0 && (
                       <div className='bg-white rounded-xl p-4 border border-gray-200 shadow-sm overflow-hidden'>
                         <h4 className='text-sm font-bold text-gray-800 mb-2'>Complementa con Pegamento</h4>
@@ -1149,7 +1366,7 @@ export default function PisoDetailPage() {
                       </div>
                     )}
 
-                    {/* JUNTEADOR sugerido */}
+                    {/* JUNTEADOR */}
                     {productosJunteadorFiltrados.length > 0 && (
                       <div className='bg-white rounded-xl p-4 border border-gray-200 shadow-sm overflow-hidden'>
                         <h4 className='text-sm font-bold text-gray-800 mb-2'>Complementa con Junteador</h4>
@@ -1241,13 +1458,13 @@ export default function PisoDetailPage() {
                                   Consultar por WhatsApp
                                 </button>
                                 <p className='text-xs text-red-600 text-center'>
-                                  El Stock es {junteadorSeleccionado.stock}, insuficiente. Contáctanos.
+                                  Stock insuficiente. Contáctanos.
                                 </p>
                               </>
                             ) : (
                               <button
-                                onClick={() => handleAddComplemento(junteadorSeleccionado, cantidadJunteador, colorSeleccionado)}
-                                disabled={!junteadorSeleccionado || (junteadorSeleccionado.formato && !colorSeleccionado) || addingToCart}
+                                onClick={() => handleAddComplemento(junteadorSeleccionado, cantidadJunteador)}
+                                disabled={!junteadorSeleccionado || addingToCart}
                                 className='w-full bg-yellow-400 text-blue-900 font-bold py-2 rounded-lg text-sm hover:bg-yellow-500 disabled:bg-gray-300 transition'
                               >
                                 Agregar al carrito
@@ -1257,7 +1474,6 @@ export default function PisoDetailPage() {
                         )}
                       </div>
                     )}
-
                   </div>
                 )}
               </div>

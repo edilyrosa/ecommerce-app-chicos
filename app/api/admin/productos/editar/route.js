@@ -132,7 +132,7 @@
 // }
 
 
-
+// app/api/admin/productos/editar/route.js
 import { NextResponse } from 'next/server';
 import { verificarAdmin } from '@/lib/adminAuth';
 import { supabase } from '@/lib/supabase';

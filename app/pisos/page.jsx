@@ -1,4 +1,6 @@
-//app/pisos/page.jsx
+// app/pisos/page.jsx
+
+
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import Header from '@/components/Header'
@@ -7,7 +9,9 @@ import BottomNav from '@/components/BottomNav'
 import ProductPiso from '@/components/ProductPiso'
 import toast from 'react-hot-toast'
 import { Filter } from 'lucide-react'
-const LINEAS_CERAMICAS = ['Pisos', 'Azulejos', 'Decorados', 'Pegamentos', 'Pastas']
+
+// Categorías que se mostrarán en esta página (en minúsculas, sin espacios extra)
+const CATEGORIAS_VISIBLES = ['pisos', 'decorados', 'adhesivos y sus complementos', 'fachaletas']
 
 export default function PisosPage() {
   const [productos, setProductos] = useState([])
@@ -16,19 +20,32 @@ export default function PisosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAcabado, setFilterAcabado] = useState('todos')
   const [filterCuerpo, setFilterCuerpo] = useState('todos')
-  const [zoomedProductoId, setZoomedProductoId] = useState(null)
   const [category, setCategory] = useState('todas')
 
-  // Obtener productos desde /api/productos
   const fetchProductos = async () => {
     try {
       const res = await fetch("/api/productos")
       if (res.ok) {
         const data = await res.json()
-        // Filtrar solo los que están en las líneas cerámicas
-        const ceramicos = data.filter(p => LINEAS_CERAMICAS.includes(p.linea))
-        setProductos(ceramicos)
-        setFilteredProductos(ceramicos)
+        
+        // 🔍 DEPURACIÓN: muestra todas las categorías únicas que vienen de la BD
+        const categoriasReales = [...new Set(data.map(p => p.categoria?.toLowerCase().trim()))]
+        console.log('Categorías disponibles en BD (normalizadas):', categoriasReales)
+        
+        // 🔍 También muestra algunos productos de prueba para asegurar que el campo 'categoria' no sea null
+        const productosConCategoria = data.filter(p => p.categoria).length
+        console.log(`Productos con categoría: ${productosConCategoria} de ${data.length}`)
+        
+        // Filtro: normalizamos la categoría del producto y la comparamos con la lista deseada
+        const filtrados = data.filter(p => {
+          const cat = p.categoria?.toLowerCase().trim()
+          return CATEGORIAS_VISIBLES.includes(cat)
+        })
+        
+        console.log(`Productos después de filtrar por categorías: ${filtrados.length}`)
+        
+        setProductos(filtrados)
+        setFilteredProductos(filtrados)
       } else {
         toast.error('Error al cargar productos')
       }
@@ -44,29 +61,23 @@ export default function PisosPage() {
     fetchProductos()
   }, [])
 
-  // Filtrado combinado: búsqueda + acabado + cuerpo
   useEffect(() => {
     let filtered = productos
-
     if (searchTerm) {
       filtered = filtered.filter(p => 
-        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.coleccion?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
-
     if (filterAcabado !== 'todos') {
       filtered = filtered.filter(p => p.acabado === filterAcabado)
     }
-
     if (filterCuerpo !== 'todos') {
       filtered = filtered.filter(p => p.cuerpo === filterCuerpo)
     }
-
     setFilteredProductos(filtered)
   }, [searchTerm, productos, filterAcabado, filterCuerpo])
 
-  // Opciones para filtros (solo valores que existen)
   const acabados = useMemo(() => 
     ['todos', ...new Set(productos.map(p => p.acabado).filter(Boolean))], 
     [productos]
@@ -76,9 +87,6 @@ export default function PisosPage() {
     [productos]
   )
 
-  const handleProductoClick = (id) => setZoomedProductoId(id)
-  const handleCloseZoom = () => setZoomedProductoId(null)
-
   return (
     <div className='min-h-screen bg-gray-50 pb-20 md:pb-8'>
       <Header 
@@ -87,19 +95,16 @@ export default function PisosPage() {
         setCategory={setCategory} 
         currentCategory={category}
       />
-      
       <div className="container mx-auto px-3 md:px-6">
         <div className="mt-3 md:mt-4 mb-4 md:mb-6">
           <PromoBanner />
         </div>
       </div>
-
       <main className='container mx-auto px-3 md:px-6'>
         <div className='mb-6'>
           <h1 className='text-2xl text-center md:text-4xl font-black text-gray-800 mb-4'>
-            Pisos, Azulejos y Fachadas.
+            Pisos, Decorados, Adhesivos y Complementos, Fachadas
           </h1>
-
           <div className='flex flex-wrap gap-3 mb-4'>
             <div className='flex items-center gap-2'>
               <Filter size={18} className='text-blue-600' />
@@ -115,7 +120,6 @@ export default function PisosPage() {
                 ))}
               </select>
             </div>
-
             <select
               value={filterAcabado}
               onChange={(e) => setFilterAcabado(e.target.value)}
@@ -128,7 +132,6 @@ export default function PisosPage() {
               ))}
             </select>
           </div>
-
           {!loading && (
             <p className='text-sm text-gray-600'>
               {filteredProductos.length} {filteredProductos.length === 1 ? 'producto encontrado' : 'productos encontrados'}
@@ -136,7 +139,6 @@ export default function PisosPage() {
           )}
         </div>
 
-        {/* Skeleton con colores corporativos */}
         {loading ? (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
             {[...Array(6)].map((_, i) => (
@@ -168,46 +170,14 @@ export default function PisosPage() {
             </button>
           </div>
         ) : (
-          <div className={`products-grid-zoom grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-10 ${zoomedProductoId ? 'has-zoomed' : ''}`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-10">
             {filteredProductos.map(producto => (
-              <ProductPiso 
-                key={producto.id} 
-                producto={producto} 
-                onClick={() => handleProductoClick(producto.id)}
-                isZoomed={zoomedProductoId === producto.id}
-                onClose={handleCloseZoom}
-              />
+              <ProductPiso key={producto.id} producto={producto} />
             ))}
           </div>
         )}
-
-        {zoomedProductoId && (
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-90 animate-fadeIn"
-            onClick={handleCloseZoom}
-          />
-        )}
       </main>
-
       <BottomNav setCategory={setCategory} currentCategory={category} />
-
-      <style jsx global>{`
-        .products-grid-zoom.has-zoomed .product-piso-card:not(.zoomed) {
-          transform: scale(0.95);
-          opacity: 0.4;
-          filter: blur(2px);
-          pointer-events: none;
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
     </div>
   )
 }
