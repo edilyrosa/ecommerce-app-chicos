@@ -81,6 +81,13 @@ export default function BottomNav({ setCategory, currentCategory }) {
                     onClick={() => router.push('/')}
                     className={`flex flex-col items-center justify-center gap-1 ${pathname === '/' && !showCategories ? 'text-blue-600' : 'text-gray-500'}`}
                 >
+                    <Home size={22} />
+                    <span className='text-[10px] font-medium'>Inicio</span>
+                </button>
+                <button
+                    onClick={() => router.push('/tienda')}
+                    className={`flex flex-col items-center justify-center gap-1 ${pathname === '/tienda' && !showCategories ? 'text-blue-600' : 'text-gray-500'}`}
+                >
                     <ShoppingBag size={22} />
                     <span className='text-[10px] font-medium'>Tienda</span>
                 </button>
