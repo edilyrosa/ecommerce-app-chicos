@@ -4,6 +4,7 @@
 'use client';
 import { useState } from 'react';
 import { Trash2, Plus, Minus, AlertCircle, Loader2 } from 'lucide-react';
+import { formatPrice } from '@/lib/formatPrice'; // ← importar
 
 export default function TablaItems({ 
   items, 
@@ -192,12 +193,12 @@ export default function TablaItems({
                 <div className="flex justify-between items-end mt-1 md:mt-2">
                   <div className='flex flex-col md:flex-row md:gap-2'>
                     <p className="text-[10px] md:text-sm text-gray-500 font-medium">
-                      Unitario: ${Number(item.precio).toFixed(2)}
+                      Unitario: {formatPrice(item.precio)}
                     </p>
                     <span className='text-[8px] md:text-[10px] font-black text-gray-900 bg-yellow-200'>IVA incluido</span>
                   </div>
                   <p className="text-base md:text-xl font-black text-gray-900">
-                    ${(Number(item.precio) * item.cantidad).toFixed(2)}
+                   {formatPrice(Number(item.precio) * item.cantidad)}
                   </p>
                 </div>
 

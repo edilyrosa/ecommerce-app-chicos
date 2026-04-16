@@ -1,10 +1,13 @@
 // // components/PedidoDetalle.jsx
 // 'use client';
 
-// import { Phone, MapPin } from 'lucide-react';
+// import { useRouter } from 'next/navigation';
+// import { Phone, MapPin, Eye } from 'lucide-react';
 
 // export default function PedidoDetalle({ pedido }) {
+//   const router = useRouter();
 //   const {
+//     id, // 👈 Asegúrate de que el pedido tenga este campo (el ID de la tabla)
 //     con_factura,
 //     items,
 //     subtotal,
@@ -20,7 +23,7 @@
 //     regimen_fiscal,
 //     numero_factura,
 //     usuario,
-//     fecha // Añadimos fecha para la leyenda
+//     fecha
 //   } = pedido;
 
 //   const productos = items || [];
@@ -31,15 +34,36 @@
 //     importe: (item.precio_unitario || item.precio) * item.cantidad
 //   }));
 
-//   // Función para formatear fecha si es necesario (opcional)
 //   const fechaFormateada = fecha ? new Date(fecha).toLocaleDateString('es-MX', {
 //     year: 'numeric',
 //     month: 'long',
 //     day: 'numeric'
 //   }) : '';
 
+//   const handleVerFactura = () => {
+//     if (id) {
+//       router.push(`/factura/${id}`);
+//     }
+//   };
+
 //   return (
 //     <div className="space-y-4 sm:space-y-6">
+//       {/* Cabecera con el botón de ojito */}
+//       <div className="flex justify-between items-center border-b border-gray-200 pb-3">
+//         <h3 className="text-lg font-bold" style={{ color: '#00162f' }}>
+//           Detalle del Pedido
+//         </h3>
+//         <button
+//           onClick={handleVerFactura}
+//           className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-white"
+//           style={{ backgroundColor: '#00162f' }}
+//           title="Ver factura / orden de compra"
+//         >
+//           <Eye size={18} />
+//           <span className="hidden sm:inline">Ver Factura</span>
+//         </button>
+//       </div>
+
 //       {/* Datos del cliente */}
 //       <div className="border-b border-gray-200 pb-3 sm:pb-4">
 //         <h4 className="font-bold text-xs sm:text-sm mb-2 sm:mb-3" style={{ color: '#00162f' }}>Cliente</h4>
@@ -59,7 +83,7 @@
 //         )}
 //       </div>
 
-//       {/* Tabla de productos - responsiva con scroll horizontal si es necesario */}
+//       {/* Tabla de productos */}
 //       <div className="overflow-x-auto">
 //         <h4 className="font-bold text-xs sm:text-sm mb-2 sm:mb-3" style={{ color: '#00162f' }}>Productos</h4>
 //         <table className="min-w-full text-xs sm:text-sm">
@@ -122,7 +146,7 @@
 //           )}
 //           {direccion_entrega && (
 //             <p className="flex items-start gap-1 text-gray-600 mt-1">
-//               <MapPin size={14} className="flex-shrink-0 mt-0.5" /> {direccion_entrega}
+//               <MapPin size={14} className="shrink-0 mt-0.5" /> {direccion_entrega}
 //             </p>
 //           )}
 //         </div>
@@ -140,19 +164,17 @@
 
 
 
-
-
-
 // components/PedidoDetalle.jsx
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { Phone, MapPin, Eye } from 'lucide-react';
+import { formatPrice } from '@/lib/formatPrice'; // ← importar formato de precios
 
 export default function PedidoDetalle({ pedido }) {
   const router = useRouter();
   const {
-    id, // 👈 Asegúrate de que el pedido tenga este campo (el ID de la tabla)
+    id,
     con_factura,
     items,
     subtotal,
@@ -173,7 +195,6 @@ export default function PedidoDetalle({ pedido }) {
 
   const productos = items || [];
 
-  // Calcular importe de cada item (si no viene calculado)
   const itemsConImporte = productos.map(item => ({
     ...item,
     importe: (item.precio_unitario || item.precio) * item.cantidad
@@ -250,10 +271,10 @@ export default function PedidoDetalle({ pedido }) {
                 <td className="p-1 sm:p-2">{item.nombre}</td>
                 <td className="p-1 sm:p-2 text-center">{item.cantidad}</td>
                 <td className="p-1 sm:p-2 text-right">
-                  ${(item.precio_unitario || item.precio).toFixed(2)}
+                  {formatPrice(item.precio_unitario || item.precio)}
                 </td>
                 <td className="p-1 sm:p-2 text-right font-medium">
-                  ${item.importe.toFixed(2)}
+                  {formatPrice(item.importe)}
                 </td>
               </tr>
             ))}
@@ -265,15 +286,15 @@ export default function PedidoDetalle({ pedido }) {
       <div className="flex flex-col items-end space-y-1 text-xs sm:text-sm border-t border-gray-200 pt-3 sm:pt-4">
         <div className="flex justify-between w-48 sm:w-64">
           <span>Subtotal:</span>
-          <span className="font-medium">${Number(subtotal).toFixed(2)}</span>
+          <span className="font-medium">{formatPrice(subtotal)}</span>
         </div>
         <div className="flex justify-between w-48 sm:w-64">
           <span>Gastos maniobra (4%):</span>
-          <span className="font-medium">${Number(gasto_maniobra).toFixed(2)}</span>
+          <span className="font-medium">{formatPrice(gasto_maniobra)}</span>
         </div>
         <div className="flex justify-between w-48 sm:w-64 text-sm sm:text-base font-bold border-t border-gray-300 pt-2 mt-1">
           <span>Total:</span>
-          <span>${Number(total).toFixed(2)}</span>
+          <span>{formatPrice(total)}</span>
         </div>
         {numero_factura && (
           <p className="text-[10px] sm:text-xs text-gray-500 mt-2">Factura: {numero_factura}</p>

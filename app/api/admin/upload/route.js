@@ -1,3 +1,4 @@
+// app/api/admin/upload/route.js
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verificarAdmin } from '@/lib/adminAuth';
