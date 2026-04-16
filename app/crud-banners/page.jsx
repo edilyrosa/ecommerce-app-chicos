@@ -472,6 +472,22 @@ export default function CrudBanners() {
                         ⚠️ Debes cargar exactamente 3 imágenes para poder guardar.
                       </p>
                     )}
+                    
+                    {/* 👇 Aquí agregas la recomendación */}
+  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+    <p className="text-xs font-bold text-blue-800 mb-1">📐 Recomendación de dimensiones</p>
+    <ul className="text-[11px] text-blue-700 space-y-1 list-disc list-inside">
+      <li>Imagen izquierda: <strong>1200 × 700 px</strong> (relación ~1.71:1)</li>
+      <li>Imágenes derechas: <strong>800 × 350 px</strong> (relación ~2.28:1)</li>
+      <li>Usa imágenes de al menos <strong>1200 px de ancho</strong> para evitar pixelación.</li>
+      <li>Formatos recomendados: <strong>JPEG</strong> (para fotos) o <strong>WebP</strong> (mejor compresión).</li>
+    </ul>
+  </div>
+
+
+
+
+
                     {/* Barra de almacenamiento (solo para categorías) */}
                     {storageUsage && (
                       <div className="mt-4 pt-3 border-t border-gray-200">
