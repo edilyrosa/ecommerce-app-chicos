@@ -1,66 +1,3 @@
-// 'use client'
-// import { useEffect, useState } from 'react'
-// import { useParams, useRouter } from 'next/navigation'
-// import Header from '@/components/Header'
-// import BottomNav from '@/components/BottomNav'
-// import toast from 'react-hot-toast'
-
-// export default function ProductoPorCodigo() {
-//   const params = useParams()
-//   const router = useRouter()
-//   const [producto, setProducto] = useState(null)
-//   const [loading, setLoading] = useState(true)
-//   const [errorMsg, setErrorMsg] = useState(null)
-
-//   const codigo = params.codigo   // En el cliente useParams no devuelve Promise
-
-//   useEffect(() => {
-//     if (!codigo) return
-//     const fetchProducto = async () => {
-//       try {
-//         const res = await fetch(`/api/productos/codigo/${codigo}`)
-//         if (res.ok) {
-//           const data = await res.json()
-//           setProducto(data)
-//         } else {
-//           const errorData = await res.json()
-//           setErrorMsg(errorData.error || 'Producto no encontrado')
-//           toast.error(`Código: ${codigo} - ${errorData.error || 'No encontrado'}`)
-//         }
-//       } catch {
-//         setErrorMsg('Error de conexión')
-//         toast.error('Error de conexión')
-//       } finally {
-//         setLoading(false)
-//       }
-//     }
-//     fetchProducto()
-//   }, [codigo, router])
-
-//   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400" /></div>
-//   if (errorMsg) return <div className="p-8 text-center text-red-600">Error: {errorMsg}</div>
-//   if (!producto) return <div className="p-8 text-center">Producto no encontrado</div>
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 pb-20 md:pb-8">
-//       <Header />
-//       <main className="container mx-auto px-3 md:px-6 py-4 md:py-6 max-w-7xl">
-//         {/* Aquí puedes usar tu componente de detalle de producto, por ejemplo: */}
-//         {/* <ProductDetail producto={producto} /> */}
-//         <div className="bg-white rounded-2xl p-6 shadow">
-//           <h1 className="text-2xl font-black">{producto.nombre}</h1>
-//           <img src={producto.imagen_url?.split(',')[0]} alt={producto.nombre} className="w-full h-auto max-h-96 object-contain my-4" />
-//           <p className="text-gray-600">{producto.descripcion}</p>
-//           <p className="text-xl font-bold mt-2">${Number(producto.precio).toFixed(2)}</p>
-//         </div>
-//       </main>
-//       <BottomNav />
-//     </div>
-//   )
-// }
-
-
-
 // app/producto/[codigo]/page.jsx
 'use client'
 import { useState, useEffect } from 'react'
@@ -249,6 +186,7 @@ export default function ProductoPorCodigo() {
           <span className="font-semibold truncate" style={{ color: '#00162f' }}>
             {producto.nombre}
           </span>
+         
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 md:gap-8 lg:gap-6 mb-8">
@@ -358,6 +296,11 @@ export default function ProductoPorCodigo() {
               <p className="text-[10px] lg:text-xs text-gray-500">
                 Precio unitario • IVA incluido
               </p>
+                 { producto.peso_kg &&
+                <p className='text-[11px] md:text-sm text-gray-700 line-clamp-2 leading-tight'>
+                    Peso: {producto.peso_kg} kg.
+                </p>
+                }
             </div>
 
             {/* Stock */}

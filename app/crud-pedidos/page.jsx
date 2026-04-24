@@ -1,30 +1,41 @@
-// app/actualizar-pedidos/page.jsx
+// app/crud-pedidos/page.jsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/authContext';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
-import BottomNav from "../../components/BottomNav"
+import BottomNav from "../../components/BottomNav";
 
 const estados = ['Procesando pedido', 'Pedido Programado', 'Pedido en Reparto', 'Entregado'];
 
 export default function ActualizarPedidos() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [buscado, setBuscado] = useState(false);
+  const [category, setCategory] = useState('todas');
 
-  const [category, setCategory] = useState('todas')
+  // 🔒 Protección: si el usuario no es administrador, redirigir al inicio
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user || !user.is_admin) {
+        toast.error('Acceso denegado. Solo administradores.');
+        router.push('/');
+      }
+    }
+  }, [user, authLoading, router]);
 
-  // Verificar que el usuario es admin (solo por email, para la demo)
-  // Si no es admin, redirigir (aunque el enlace solo aparece para admin)
-  if (user && user.email !== 'admin@gmail.com') {
-    router.push('/');
-    return null;
+  // No mostrar nada mientras se verifica autenticación o si no es admin
+  if (authLoading || !user || !user.is_admin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+      </div>
+    );
   }
 
   const buscarPedidos = async (e) => {
@@ -71,7 +82,6 @@ export default function ActualizarPedidos() {
       const data = await res.json();
       if (res.ok) {
         toast.success('Estado actualizado');
-        // Actualizar localmente
         setPedidos(prev =>
           prev.map(p => p.id === pedidoId ? { ...p, estatus_pedido: nuevoEstado } : p)
         );
@@ -144,7 +154,7 @@ export default function ActualizarPedidos() {
                           value={pedido.estatus_pedido || 'Procesando pedido'}
                           onChange={(e) => actualizarEstado(pedido.id, e.target.value)}
                           className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                          disabled={isEntregado} // Opcional: no permitir cambiar si ya está entregado
+                          disabled={isEntregado}
                         >
                           {estados.map(est => (
                             <option key={est} value={est}>{est}</option>
@@ -159,8 +169,9 @@ export default function ActualizarPedidos() {
           </div>
         )}
       </main>
-
-         <BottomNav setCategory={setCategory} currentCategory={category} />
+      <BottomNav setCategory={setCategory} currentCategory={category} />
     </div>
   );
 }
+
+

@@ -1,3 +1,4 @@
+// app/api/auth/user/route.js
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 import { verificarToken } from '@/lib/auth';

@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verificarToken } from '@/lib/auth';
 
-// Verificar que el usuario es admin (por email)
 async function verificarAdmin(request) {
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
@@ -14,14 +13,24 @@ async function verificarAdmin(request) {
   if (!result.valid) {
     return { error: 'Token inválido', status: 401 };
   }
-  // Verificar que el email sea admin@gmail.com
-  if (result.data.email !== 'admin@gmail.com') {
+  // CORRECCIÓN: extraer el payload del objeto result
+  const payload = result.data;
+
+  // Consultar el rol de administrador directamente desde la BD
+  const { data: user, error } = await supabase
+    .from('usuarios')
+    .select('is_admin')
+    .eq('id', payload.id)
+    .single();
+
+  if (error || !user || !user.is_admin) {
+    // Log opcional para depuración
+    console.error('Error en verificarAdmin:', error, user);
     return { error: 'No tienes permisos de administrador', status: 403 };
   }
-  return { usuario: result.data };
+  return { usuario: payload };
 }
 
-// GET: Obtener pedidos por email de cliente
 export async function GET(request) {
   try {
     const adminCheck = await verificarAdmin(request);
@@ -35,7 +44,6 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
     }
 
-    // Buscar usuario por email
     const { data: usuario, error: userError } = await supabase
       .from('usuarios')
       .select('id')
@@ -46,7 +54,6 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
-    // Obtener pedidos del usuario
     const { data: pedidos, error: pedidosError } = await supabase
       .from('pedidos_pendientes')
       .select('*')
@@ -65,7 +72,6 @@ export async function GET(request) {
   }
 }
 
-// PATCH: Actualizar estado de un pedido
 export async function PATCH(request) {
   try {
     const adminCheck = await verificarAdmin(request);
@@ -78,7 +84,6 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'pedidoId y nuevoEstado requeridos' }, { status: 400 });
     }
 
-    // Verificar que el estado sea uno de los permitidos
     const estadosPermitidos = ['Procesando pedido', 'Pedido Programado', 'Pedido en Reparto', 'Entregado'];
     if (!estadosPermitidos.includes(nuevoEstado)) {
       return NextResponse.json({ error: 'Estado no válido' }, { status: 400 });

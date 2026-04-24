@@ -223,7 +223,7 @@ export default function CrudProductos() {
       return;
     }
     if (user && !user.is_admin) {
-      toast.error('No tienes permisos de administrador');
+      toast.error('Acceso denegado. Solo administradores.');
       router.push('/');
       return;
     }

@@ -160,6 +160,11 @@ const Carrusel = ({ items, onItemClick }) => {
               <p className="text-[9px] md:text-[10px] font-bold text-gray-700 text-center line-clamp-2 leading-tight w-full">
                 {item.nombre}
               </p>
+                 { item.peso_kg &&
+                <p className='text-[9px] md:text-[10px] text-gray-700 line-clamp-2 leading-tight'>
+                    Peso: {item.peso_kg} kg.
+                </p>
+                }
               <p className="text-[9px] md:text-[10px] font-black leading-none" style={{ color: '#00162f' }}>
                 ${Number(item.precio).toFixed(2)}
               </p>

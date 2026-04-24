@@ -6,6 +6,7 @@ import BannerSection from "../components/BannerSection";        // ← importaci
 import { BannerSkeleton } from "../components/BannerSection"; // ← importación nombrada
 import BottomNav from "../components/BottomNav";
 import PromoBanner from "../components/PromoBanner"; 
+import SucursalesSection from "../components/SucursalesSection"; 
 import toast from "react-hot-toast";
 
 // Hook para detectar móvil (idéntico al de BannerSection)
@@ -49,7 +50,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50 pb-20">
         <Header />
-        <main className="flex-1 container mx-auto px-3 md:px-6 py-5 max-w-7xl">
+        <main className="flex-1 container mx-auto px-2 md:px-4 py-5">
           <BannerSkeleton isMobile={isMobile} />
         </main>
         <BottomNav />
@@ -60,14 +61,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20 md:pb-8">
       <Header />
-      <main className="container mx-auto px-3 md:px-6 py-4 md:py-6 max-w-7xl">
+      <main className="container mx-auto px-4 md:px-4 py-4 md:py-6">
         {/* //* Solo banners de categorías */}
         <BannerSection productos={productos} tipo="categorias" />
         {/* //* Solo promociones */}
         <BannerSection productos={productos} tipo="promocion" />
         {/* //* Solo productos nuevos */}
         <BannerSection productos={productos} tipo="productos nuevos" />
-              <PromoBanner />
+        <SucursalesSection />
       </main>
       <BottomNav />
     </div>

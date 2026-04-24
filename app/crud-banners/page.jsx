@@ -1,15 +1,17 @@
 // app/crud-banners/page.jsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 import { X, Upload, ChevronDown, ChevronRight, Package } from 'lucide-react';
+import { useAuth } from '@/context/authContext';
 
 export default function CrudBanners() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -28,13 +30,8 @@ export default function CrudBanners() {
   const [openSection, setOpenSection] = useState(null);
   const [openCategoriaSub, setOpenCategoriaSub] = useState(null);
 
-  useEffect(() => {
-    fetchBanners();
-    fetchCategoriasOptions();
-    fetchStorageUsage();
-  }, []);
-
-  const fetchBanners = async () => {
+  // --- Funciones fetch (memoizadas con useCallback para ser estables) ---
+  const fetchBanners = useCallback(async () => {
     try {
       const token = Cookies.get('token');
       if (!token) {
@@ -56,9 +53,9 @@ export default function CrudBanners() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const fetchCategoriasOptions = async () => {
+  const fetchCategoriasOptions = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/options?type=categorias');
       if (res.ok) {
@@ -68,9 +65,9 @@ export default function CrudBanners() {
     } catch (error) {
       console.error('Error cargando categorías', error);
     }
-  };
+  }, []);
 
-  const fetchStorageUsage = async () => {
+  const fetchStorageUsage = useCallback(async () => {
     try {
       const token = Cookies.get('token');
       const res = await fetch('/api/admin/storage-usage', {
@@ -83,14 +80,45 @@ export default function CrudBanners() {
     } catch (error) {
       console.error('Error al obtener uso de almacenamiento:', error);
     }
-  };
+  }, []);
 
+  // --- useEffect de autenticación y redirección (siempre se ejecuta) ---
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user || !user.is_admin) {
+        toast.error('Acceso denegado. Solo administradores.');
+        router.push('/');
+      }
+    }
+  }, [user, authLoading, router]);
+
+  // --- useEffect para cargar datos (ahora ANTES del return condicional) ---
+  useEffect(() => {
+    // Solo cargar datos si el usuario está autenticado y es admin
+    if (!authLoading && user && user.is_admin) {
+      fetchBanners();
+      fetchCategoriasOptions();
+      fetchStorageUsage();
+    }
+  }, [authLoading, user, fetchBanners, fetchCategoriasOptions, fetchStorageUsage]);
+
+  // --- Muestras de carga mientras se verifica autenticación ---
+  // Nota: esto NO interrumpe el orden de los Hooks porque ya todos los Hooks
+  // se ejecutaron antes de este return condicional.
+  if (authLoading || !user || !user.is_admin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+      </div>
+    );
+  }
+
+  // Resto del componente (handlers, formulario, listado, etc.) - sin cambios
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Subir imágenes
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (form.imagenes.length + files.length > 3) {
@@ -115,7 +143,6 @@ export default function CrudBanners() {
           imagenes: [...prev.imagenes, ...newUrls]
         }));
         toast.success('Imágenes subidas');
-        // Actualizar uso de almacenamiento después de subir
         fetchStorageUsage();
       } else {
         const error = await res.json();
@@ -128,7 +155,6 @@ export default function CrudBanners() {
     }
   };
 
-  // Eliminar imagen
   const handleRemoveImage = async (index) => {
     const urlToRemove = form.imagenes[index];
     if (!urlToRemove) return;
@@ -162,7 +188,6 @@ export default function CrudBanners() {
           imagenes: prev.imagenes.filter((_, i) => i !== index)
         }));
         toast.success('Imagen eliminada');
-        // Actualizar uso de almacenamiento después de eliminar
         fetchStorageUsage();
       } else {
         const error = await res.json();
@@ -185,7 +210,6 @@ export default function CrudBanners() {
     }));
   };
 
-  // Validar códigos para promocion/productos nuevos (exactamente 3)
   const validarCodigos = (codigosStr) => {
     const codes = codigosStr.split(',').map(c => c.trim()).filter(Boolean);
     return codes.length === 3;
@@ -203,7 +227,6 @@ export default function CrudBanners() {
         return;
       }
     } else {
-      // promocion o productos nuevos
       const codigosStr = typeof form.imagenes === 'string' ? form.imagenes : '';
       if (!validarCodigos(codigosStr)) {
         toast.error('Debes ingresar exactamente 3 códigos de producto (separados por comas)');
@@ -279,7 +302,6 @@ export default function CrudBanners() {
     setOpenCategoriaSub(null);
   };
 
-  // Agrupar banners
   const bannersPorTipo = {
     categorias: banners.filter(b => b.tipo === 'categorias'),
     promocion: banners.filter(b => b.tipo === 'promocion'),
@@ -302,7 +324,7 @@ export default function CrudBanners() {
     setOpenCategoriaSub(openCategoriaSub === cat ? null : cat);
   };
 
-  // Skeleton de carga
+  // Skeleton de carga mientras se obtienen los datos
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
@@ -344,7 +366,6 @@ export default function CrudBanners() {
           Administrar Banners
         </h1>
 
-        {/* Overlay de carga (subiendo imágenes) */}
         {uploading && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-white rounded-xl p-6 shadow-2xl flex flex-col items-center gap-3">
@@ -354,14 +375,12 @@ export default function CrudBanners() {
           </div>
         )}
 
-        {/* Formulario de edición */}
         {editingId && (
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
             <h2 className="text-xl font-bold mb-4" style={{ color: '#00162f' }}>
               Editando Banner
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Tipo deshabilitado */}
               <div>
                 <label className="block text-sm font-bold mb-1">Tipo</label>
                 <input
@@ -473,22 +492,16 @@ export default function CrudBanners() {
                       </p>
                     )}
                     
-                    {/* 👇 Aquí agregas la recomendación */}
-  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-    <p className="text-xs font-bold text-blue-800 mb-1">📐 Recomendación de dimensiones</p>
-    <ul className="text-[11px] text-blue-700 space-y-1 list-disc list-inside">
-      <li>Imagen izquierda: <strong>1200 × 700 px</strong> (relación ~1.71:1)</li>
-      <li>Imágenes derechas: <strong>800 × 350 px</strong> (relación ~2.28:1)</li>
-      <li>Usa imágenes de al menos <strong>1200 px de ancho</strong> para evitar pixelación.</li>
-      <li>Formatos recomendados: <strong>JPEG</strong> (para fotos) o <strong>WebP</strong> (mejor compresión).</li>
-    </ul>
-  </div>
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs font-bold text-blue-800 mb-1">📐 Recomendación de dimensiones</p>
+                      <ul className="text-[11px] text-blue-700 space-y-1 list-disc list-inside">
+                        <li>Imagen izquierda: <strong>1200 × 700 px</strong> (relación ~1.71:1)</li>
+                        <li>Imágenes derechas: <strong>800 × 350 px</strong> (relación ~2.28:1)</li>
+                        <li>Usa imágenes de al menos <strong>1200 px de ancho</strong> para evitar pixelación.</li>
+                        <li>Formatos recomendados: <strong>JPEG</strong> (para fotos) o <strong>WebP</strong> (mejor compresión).</li>
+                      </ul>
+                    </div>
 
-
-
-
-
-                    {/* Barra de almacenamiento (solo para categorías) */}
                     {storageUsage && (
                       <div className="mt-4 pt-3 border-t border-gray-200">
                         <div className="flex justify-between text-[10px] md:text-xs text-gray-500 mb-1">
@@ -523,6 +536,9 @@ export default function CrudBanners() {
                   <p className="text-xs text-gray-500 mt-1">
                     Ingrese tres códigos de producto que existan en la tabla products.
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    ⚠️ Importante: Los códigos son <strong>sensibles a mayúsculas/minúsculas</strong>. Deben coincidir exactamente con los almacenados en la base de datos.
+                  </p>
                   {typeof form.imagenes === 'string' && form.imagenes.trim() !== '' && !validarCodigos(form.imagenes) && (
                     <p className="text-xs text-red-500 mt-1">
                       ⚠️ Debes ingresar exactamente 3 códigos (separados por comas).
@@ -539,7 +555,7 @@ export default function CrudBanners() {
                     (form.tipo === 'categorias' && form.imagenes.length !== 3) ||
                     (form.tipo !== 'categorias' && typeof form.imagenes === 'string' && !validarCodigos(form.imagenes))
                   }
-                  className={`bg-yellow-400 text-[#00162f] font-bold py-2 px-6 rounded-lg hover:bg-yellow-500 transition disabled:opacity-50`}
+                  className="bg-yellow-400 text-[#00162f] font-bold py-2 px-6 rounded-lg hover:bg-yellow-500 transition disabled:opacity-50"
                 >
                   Actualizar Banner
                 </button>
@@ -555,13 +571,11 @@ export default function CrudBanners() {
           </div>
         )}
 
-        {/* Lista de banners agrupada */}
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-xl font-bold mb-4" style={{ color: '#00162f' }}>
             Banners Existentes
           </h2>
 
-          {/* Sección Categorías */}
           <div className="mb-4 border rounded-lg overflow-hidden">
             <button
               onClick={() => toggleSection('categorias')}
@@ -611,7 +625,6 @@ export default function CrudBanners() {
             )}
           </div>
 
-          {/* Sección Promociones */}
           <div className="mb-4 border rounded-lg overflow-hidden">
             <button
               onClick={() => toggleSection('promocion')}
@@ -646,7 +659,6 @@ export default function CrudBanners() {
             )}
           </div>
 
-          {/* Sección Productos Nuevos */}
           <div className="border rounded-lg overflow-hidden">
             <button
               onClick={() => toggleSection('productos nuevos')}

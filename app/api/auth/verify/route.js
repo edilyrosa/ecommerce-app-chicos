@@ -1,3 +1,4 @@
+//app/api/auth/verify/route.js
 import { NextResponse } from 'next/server';
 import { verificarToken } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';

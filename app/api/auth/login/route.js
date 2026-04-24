@@ -1,3 +1,4 @@
+// app/api/auth/login/route.js
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
