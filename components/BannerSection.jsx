@@ -142,9 +142,9 @@ const Carrusel = ({ items, onItemClick }) => {
             <button
               key={item.id}
               onClick={() => onItemClick(destino)}
-              className="flex-shrink-0 snap-start group flex flex-col items-center gap-1.5 w-[88px] md:w-[108px]"
+              className="shrink-0 snap-start group flex flex-col items-center gap-1.5 w-[80px] md:w-[100px]"
             >
-              <div className="relative w-[68px] h-[68px] md:w-[88px] md:h-[88px] rounded-full overflow-hidden border-[2.5px] border-gray-200 group-hover:border-yellow-400 transition-all duration-200 bg-white shadow-sm flex-shrink-0">
+              <div className="relative w-[60px] h-[60px] md:w-[80px] md:h-[80px] rounded-full overflow-hidden border-[2.5px] border-gray-200 group-hover:border-yellow-400 transition-all duration-200 bg-white shadow-sm flex-shrink-0">
                 <img
                   src={img}
                   alt={item.nombre}
@@ -286,7 +286,7 @@ function BannerTriptych({ banner, transitioning, onImageClick }) {
             <img
               src={left}
               alt={banner.categoria || 'banner'}
-              className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.04]"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
             />
           </button>
         ) : (
@@ -326,7 +326,7 @@ function BannerTriptych({ banner, transitioning, onImageClick }) {
                   <img
                     src={img}
                     alt=""
-                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.05]"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
                   />
                 </button>
               ) : (
@@ -726,7 +726,7 @@ export default function BannerSection({ productos = [], tipo = null }) {
       router.push('/tienda')
     }
   }}
-  className="ml-auto text-[10px] md:text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+  className="ml-auto text-[12px] md:text-base font-bold text-blue-600 hover:text-blue-800 transition-colors"
 >
   Ver todos →
 </button>
