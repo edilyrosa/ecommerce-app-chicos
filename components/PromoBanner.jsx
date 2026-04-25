@@ -28,7 +28,7 @@ export default function PromoBanner() {
         {
             id: 3,
             image: 'https://www.fierros.com.co/uploads/news-pictures/pphoto-1315.png',
-            alt: 'Envío Gratis',
+            alt: 'Envío Gratis para los municipos Colima y Villa de Álvarez del Edo Colima.',
             title: 'ENVÍO GRATUITO',
             desc: 'En todas tus compras mayores a $50'
         }

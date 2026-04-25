@@ -229,7 +229,7 @@ export default function ProductPiso({ producto }) {
           </div>
         )}
 
-        <div className='flex items-center gap-1.5 mb-4'>
+        <div className='flex items-center gap-1.5'>
           <div className={`w-2 h-2 rounded-full ${
             producto.stock <= 3 
               ? 'bg-red-500' 
@@ -248,7 +248,7 @@ export default function ProductPiso({ producto }) {
           </span>
         </div>
 
-        <div className='mt-auto pt-4 border-t border-gray-50'>
+        <div className='mt-auto border-t border-gray-50'>
           <div className='flex items-baseline gap-2'>
             <span className='text-2xl font-black text-gray-900'>
               {formatPrice(precioMostrado)}
@@ -259,12 +259,12 @@ export default function ProductPiso({ producto }) {
               </span>
             )}
           </div>
-          <p className='text-[10px] text-gray-400 font-bold mt-1 tracking-tight'>
+          <p className='text-[10px] text-gray-400 font-bold tracking-tight'>
             {etiquetaPrecio}
           </p>
-          <div className='flex items-center gap-1 text-[10px] text-yellow-500 font-bold mt-0.5'>
+          <div className='flex items-center gap-1 text-[10px] text-yellow-500 font-bold'>
             <Truck size={12} />
-            <span>Envío Gratis</span>
+            <span>Envío Gratis para los municipos Colima y Villa de Álvarez del Edo Colima.</span>
           </div>
           <p className='text-[10px] text-green-700 font-bold mt-0.5'>📦 Entrega de 3 a 5 días hábiles.</p>
         </div>
