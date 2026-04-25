@@ -282,7 +282,7 @@ export default function SucursalesSection() {
               lineHeight:1.75,
               fontWeight:300,
             }}>
-              Selecciona una sucursal para ver su ubicación en el mapa. Material de entrega inmediata y servicio a domicilio.
+              Selecciona una sucursal para ver su ubicación en el mapa.
             </p>
 
             {/* WhatsApp Business */}
