@@ -124,21 +124,70 @@ export default function FacturaContent({ pedido }) {
     const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     setIsMobile(mobile);
   }, []);
-if (!pedido) {
+ if (!pedido) {
     return (
       <div className="min-h-screen bg-gray-50 mt-6 p-3 md:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto bg-white shadow-xl border-2 border-gray-300 p-4 md:p-6 animate-pulse">
+          {/* skeleton ... (se mantiene igual por brevedad) */}
           <div className="border-b-4 border-blue-900 pb-6 mb-4">
             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
               <div className="flex-1">
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-300 rounded" />
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-300 rounded"></div>
                   <div className="space-y-2">
-                    <div className="h-4 w-48 bg-gray-300 rounded" />
-                    <div className="h-3 w-32 bg-gray-300 rounded" />
-                    <div className="h-3 w-40 bg-gray-300 rounded" />
+                    <div className="h-4 w-48 bg-gray-300 rounded"></div>
+                    <div className="h-3 w-32 bg-gray-300 rounded"></div>
+                    <div className="h-3 w-32 bg-gray-300 rounded"></div>
+                    <div className="h-3 w-40 bg-gray-300 rounded"></div>
                   </div>
                 </div>
+                <div className="h-3 w-24 bg-gray-300 rounded mt-2"></div>
+                <div className="h-3 w-40 bg-gray-300 rounded mt-1"></div>
+              </div>
+              <div className="text-right">
+                <div className="h-8 w-24 bg-gray-300 rounded mb-2"></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-4 w-12 bg-gray-300 rounded"></div>
+                  <div className="h-4 w-12 bg-gray-300 rounded"></div>
+                  <div className="h-4 w-20 bg-gray-300 rounded"></div>
+                  <div className="h-4 w-20 bg-gray-300 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="border-b-2 border-gray-300 pb-4 mb-4">
+            <div className="h-5 w-16 bg-gray-300 rounded mb-3"></div>
+            <div className="h-4 w-48 bg-gray-300 rounded mb-2"></div>
+            <div className="h-3 w-64 bg-gray-300 rounded mb-1"></div>
+            <div className="h-3 w-56 bg-gray-300 rounded mb-1"></div>
+            <div className="h-3 w-40 bg-gray-300 rounded"></div>
+          </div>
+          <div className="mb-4">
+            <div className="grid grid-cols-12 gap-2 bg-gray-300 h-8 rounded mb-2"></div>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="grid grid-cols-12 gap-2 py-2 border-b border-gray-200">
+                <div className="col-span-2 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-4 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-1 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-1 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-2 h-4 bg-gray-300 rounded"></div>
+                <div className="col-span-2 h-4 bg-gray-300 rounded"></div>
+              </div>
+            ))}
+          </div>
+          <div className="border-t-2 border-gray-300 pt-4">
+            <div className="max-w-md ml-auto space-y-2">
+              <div className="flex justify-between">
+                <div className="h-4 w-16 bg-gray-300 rounded"></div>
+                <div className="h-4 w-20 bg-gray-300 rounded"></div>
+              </div>
+              <div className="flex justify-between">
+                <div className="h-4 w-24 bg-gray-300 rounded"></div>
+                <div className="h-4 w-20 bg-gray-300 rounded"></div>
+              </div>
+              <div className="flex justify-between pt-2 border-t-2 border-gray-300">
+                <div className="h-6 w-20 bg-gray-300 rounded"></div>
+                <div className="h-6 w-28 bg-gray-300 rounded"></div>
               </div>
             </div>
           </div>
@@ -146,7 +195,7 @@ if (!pedido) {
       </div>
     );
   }
- 
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">

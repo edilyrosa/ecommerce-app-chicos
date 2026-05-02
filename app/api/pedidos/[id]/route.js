@@ -73,6 +73,7 @@ export async function GET(request, { params }) {
       conFactura: pedido.con_factura,
       direccion_entrega: pedido.direccion_entrega,
       telefono_contacto: pedido.telefono_contacto,
+      costo_envio: pedido.costo_envio ?? 0, 
       datos_fiscales: pedido.con_factura ? {
         rfc: pedido.rfc,
         domicilio_fiscal: pedido.domicilio_fiscal,
