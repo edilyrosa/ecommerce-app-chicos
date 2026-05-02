@@ -13,7 +13,7 @@ const formatMoney = (value) => {
 };
 
 // ------------------------------------------------------------------
-// 1. Patrón de reemplazo de funciones CSS modernas no soportadas
+// *1. Patrón de reemplazo de funciones CSS modernas no soportadas
 // ------------------------------------------------------------------
 const patchCss = (css) => {
   if (!css) return '';
