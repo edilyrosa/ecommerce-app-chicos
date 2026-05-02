@@ -1,19 +1,4 @@
-// // app/api/banners/route.js
-// import { NextResponse } from 'next/server';
-// import { supabase } from '@/lib/supabase';
 
-// export async function GET() {
-//   try {
-//     const { data, error } = await supabase
-//       .from('banners')
-//       .select('*')
-//       .order('created_at', { ascending: false });
-//     if (error) throw error;
-//     return NextResponse.json(data);
-//   } catch (error) {
-//     return NextResponse.json({ error: error.message }, { status: 500 });
-//   }
-// }
 
 // app/api/banners/route.js
 import { NextResponse } from 'next/server';

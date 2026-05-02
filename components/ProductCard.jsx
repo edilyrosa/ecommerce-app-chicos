@@ -326,7 +326,7 @@ export default function ProductCard({ producto, onClick, isZoomed, onClose }) {
 
                 <div className='flex items-center gap-1 text-[10px] text-green-600 font-bold mt-0.5'>
                     <Truck size={12} />
-                    <span>Envío Gratis para los municipos Colima y Villa de Álvarez del Edo Colima.</span>
+                    <span>Envío Gratis para los municipos Colima y Villa de Álvarez del Edo Colima para compras mayores de $ 3,000.00</span>
                 </div>
                 <p className='text-[10px] text-green-700 font-bold mt-0.5'>📦 Entrega de 3 a 5 días hábiles.</p>
             </div>

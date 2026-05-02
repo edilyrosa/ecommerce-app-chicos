@@ -59,7 +59,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20 md:pb-8">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white pb-20 md:pb-8">
       <Header />
       <main className="container mx-auto px-4 md:px-4 py-4 md:py-6">
         {/* //* Solo banners de categorías */}

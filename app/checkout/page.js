@@ -55,7 +55,7 @@ const shippingData = new Map();
   shippingData.set(cp.toString(), { municipio: 'Villa de Álvarez', estado: 'Colima', tipoCobro: 'subtotal', tarifaLeve: 200, tarifaPesado: 0 });
 });
 
-// ========== NUEVA FUNCIÓN DE CÁLCULO CON MÚLTIPLOS DE 4 TONELADAS ==========
+// ========== FUNCIÓN DE CÁLCULO (basada en bloques de 1.5 toneladas) ==========
 function calcularCostoEnvio(codigoPostal, pesoTotalKg, subtotal) {
   const zona = shippingData.get(codigoPostal);
   if (!zona) return { valido: false, costo: 0, mensaje: 'No realizamos envíos a esta zona' };
@@ -63,19 +63,9 @@ function calcularCostoEnvio(codigoPostal, pesoTotalKg, subtotal) {
   let costo = 0;
   if (zona.tipoCobro === 'weight') {
     const pesoTon = pesoTotalKg / 1000;
-
-    if (pesoTon <= 4) {
-      costo = pesoTon <= 1.5 ? zona.tarifaLeve : zona.tarifaPesado;
-    } else {
-      const fullBlocks = Math.floor(pesoTon / 4);
-      const resto = pesoTon - (fullBlocks * 4);
-      costo = fullBlocks * zona.tarifaPesado;
-      if (resto > 0) {
-        costo += resto <= 1.5 ? zona.tarifaLeve : zona.tarifaPesado;
-      }
-    }
-    // Para zonas por peso: mensaje simple
-    const mensaje = costo === 0 ? 'Envío gratuito' : `Costo de envío: ${formatPrice(costo)}`;
+    const bloques = Math.ceil(pesoTon / 1.5);
+    costo = bloques * zona.tarifaLeve;
+    const mensaje = costo === 0 ? 'Envío gratuito' : `Costo de envío con maniobra: ${formatPrice(costo)}`;
     return {
       valido: true,
       costo,
@@ -84,11 +74,9 @@ function calcularCostoEnvio(codigoPostal, pesoTotalKg, subtotal) {
       mensaje
     };
   } else {
-    // Zonas por subtotal (Colima y Villa de Álvarez)
     costo = subtotal < 3000 ? zona.tarifaLeve : zona.tarifaPesado;
-    const leyenda = '(envío gratuito para compras con subtotal superior a 3000 Pesos)';
-    // Mostrar siempre el costo numérico (0 o 200) con la leyenda
-    const mensaje = `Costo de envío: ${formatPrice(costo)} ${leyenda}`;
+    const leyenda = '(envío gratuito para compras con subtotal superior a $ 3,000.00)';
+    const mensaje = `Costo de envío con maniobra: ${formatPrice(costo)} ${leyenda}`;
     return {
       valido: true,
       costo,
@@ -98,6 +86,7 @@ function calcularCostoEnvio(codigoPostal, pesoTotalKg, subtotal) {
     };
   }
 }
+
 export default function Checkout() {
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -125,10 +114,20 @@ export default function Checkout() {
   const { user, updateCartCount } = useAuth();
   const router = useRouter();
 
-  // Estado para información de envío
   const [envioInfo, setEnvioInfo] = useState({ valido: false, costo: 0, municipio: '', estado: '', mensaje: '' });
 
-  // Obtener carrito
+  // Bloquear scroll del body cuando el modal está activo
+  useEffect(() => {
+    if (procesando) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [procesando]);
+
   const fetchCarrito = useCallback(async () => {
     try {
       const token = Cookies.get('token');
@@ -214,7 +213,6 @@ export default function Checkout() {
     }
   }, [fetchCarrito, updateCartCount]);
 
-  // Cálculos financieros y peso
   const subtotal = useMemo(() => 
     items.reduce((sum, item) => sum + (Number(item.precio) * item.cantidad), 0), 
     [items]
@@ -233,14 +231,12 @@ export default function Checkout() {
   );
   const tieneErrores = itemsConError.length > 0;
 
-  // Validaciones de entrega
   const codigoPostalValido = /^\d{5}$/.test(codigoPostalEntrega);
   const zonaPermitida = shippingData.has(codigoPostalEntrega);
   const telefonoValido = /^\d{10}$|^\d{3}-\d{3}-\d{4}$/.test(telefonoContacto);
   const mostrarCamposEntrega = codigoPostalValido && zonaPermitida;
   const datosEntregaValidos = mostrarCamposEntrega && telefonoValido && direccionEntrega.trim() !== '';
 
-  // Calcular envío cuando cambia código, peso o subtotal
   useEffect(() => {
     if (codigoPostalValido && zonaPermitida) {
       const resultado = calcularCostoEnvio(codigoPostalEntrega, totalWeightKg, subtotal);
@@ -250,7 +246,6 @@ export default function Checkout() {
     }
   }, [codigoPostalEntrega, totalWeightKg, subtotal]);
 
-  // Validación de datos fiscales
   const rfcValido = /^[A-Z&Ñ]{4}\d{6}[A-Z0-9]{3}$/.test(rfc);
   const datosFiscalesValidos = tipoFactura !== 'con_factura' || (
     rfc.trim() !== '' && rfcValido &&
@@ -336,7 +331,6 @@ export default function Checkout() {
     } catch (error) {
       console.error(error);
       toast.error(error.message || 'Error al procesar la compra');
-    } finally {
       setProcesando(false);
     }
   };
@@ -396,368 +390,378 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pb-20 md:pb-8">
-      <Header 
-        searchTerm={searchTerm} 
-        setSearchTerm={setSearchTerm}
-        setCategory={setCategory} 
-        currentCategory={category}
-      />
-      <main className="flex-1 container mx-auto px-2 md:px-4 py-4 md:py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 md:mb-0 text-black">
-            Finalizar Compra
-          </h1>
-          {searchTerm && (
-            <p className="text-xs md:text-sm text-gray-700 font-medium">
-              {filteredItems.length} de {items.length} producto{items.length !== 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
-
-        {filteredItems.length === 0 && searchTerm ? (
-          <div className="text-center py-12 md:py-16 bg-white rounded-xl md:rounded-2xl shadow-md border border-blue-50">
-            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-100 to-yellow-100 flex items-center justify-center">
-              <span className="text-2xl md:text-3xl">🔍</span>
-            </div>
-            <p className="text-base md:text-lg text-gray-700 mb-4 font-semibold">
-              No se encontraron productos con: {searchTerm}
-            </p>
-            <button 
-              onClick={() => setSearchTerm('')} 
-              className="px-6 py-2.5 rounded-xl font-bold text-sm md:text-base transition-all shadow-lg"
-              style={{ backgroundColor: '#00162f', color: 'white' }}
-            >
-              Limpiar búsqueda
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-            <div className="lg:col-span-2">
-              <TablaItems 
-                items={filteredItems}
-                onAjustarCantidad={ajustarCantidad}
-                onEliminarItem={eliminarItem}
-                mostrarControles={true}
-              />
-            </div>
-
-            <div className="lg:col-span-1">
-              <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl sticky top-24 border" style={{ borderColor: '#00162f20' }}>
-                <h2 className="text-lg md:text-xl font-black mb-4 md:mb-6 text-black">
-                  {searchTerm ? 'Total Filtrado' : 'Detalles de Pago'}
-                </h2>
-
-                {/* CLIENTE */}
-                <div className="mb-6 pb-6 border-b border-dashed" style={{ borderColor: '#00162f20' }}>
-                  <h3 className="text-sm md:text-base font-bold mb-3 text-black">Cliente</h3>
-                  <div className="space-y-1 text-xs md:text-sm">
-                    <p className="font-bold text-base md:text-lg text-black">
-                      {user?.nombre || 'Nombre no disponible'}
-                    </p>
-                    <p className="text-gray-800">
-                      <span className="font-semibold">Email:</span> {user?.email || 'Email no disponible'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* DATOS DE ENTREGA */}
-                <div className="mb-6 pb-6 border-b border-dashed" style={{ borderColor: '#00162f20' }}>
-                  <h3 className="text-sm md:text-base font-bold mb-3 text-black">Datos de entrega</h3>
-                  
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium mb-1 text-gray-800">Código postal *</label>
-                    <input
-                      type="text"
-                      value={codigoPostalEntrega}
-                      onChange={(e) => setCodigoPostalEntrega(e.target.value.replace(/\D/g, ''))}
-                      maxLength={5}
-                      placeholder="28000"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600 ${
-                        codigoPostalEntrega && !codigoPostalValido ? 'border-red-400' : 
-                        (codigoPostalValido && !zonaPermitida) ? 'border-red-400' : 'border-gray-200'
-                      }`}
-                      style={{ '--tw-ring-color': '#fbbf24' }}
-                      required
-                    />
-                    {codigoPostalEntrega && !codigoPostalValido && (
-                      <span className="text-xs text-red-600 mt-1 block">Código postal inválido (5 dígitos)</span>
-                    )}
-                    {codigoPostalValido && !zonaPermitida && (
-                      <span className="text-xs text-red-600 mt-1 block">No realizamos envíos a esta zona</span>
-                    )}
-                    {codigoPostalValido && zonaPermitida && envioInfo.valido && (
-                      <div className="mt-2 text-xs text-green-700">
-                        <p>Municipio: {envioInfo.municipio}, {envioInfo.estado}</p>
-                        <p>{envioInfo.mensaje}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {mostrarCamposEntrega && (
-                    <>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1 text-gray-800">Teléfono de contacto *</label>
-                        <input
-                          type="tel"
-                          value={telefonoContacto}
-                          onChange={(e) => setTelefonoContacto(e.target.value)}
-                          placeholder="3121234567 o 312-123-4567"
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600 ${
-                            telefonoContacto && !telefonoValido ? 'border-red-400' : 'border-gray-200'
-                          }`}
-                          style={{ '--tw-ring-color': '#fbbf24' }}
-                          required
-                        />
-                        {telefonoContacto && !telefonoValido && (
-                          <span className="text-xs text-red-600 mt-1 block">Teléfono inválido (10 dígitos)</span>
-                        )}
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1 text-gray-800">Dirección de entrega *</label>
-                        <input
-                          type="text"
-                          value={direccionEntrega}
-                          onChange={(e) => setDireccionEntrega(e.target.value)}
-                          placeholder="Calle, número, colonia, ciudad, estado"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
-                          style={{ '--tw-ring-color': '#fbbf24' }}
-                          required
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1 text-gray-800">Referencia Google Maps (opcional)</label>
-                        <input
-                          type="text"
-                          value={direccionGoogle}
-                          onChange={(e) => setDireccionGoogle(e.target.value)}
-                          placeholder="Pega aquí la dirección de Google Maps o coordenadas"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
-                          style={{ '--tw-ring-color': '#fbbf24' }}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* SUBTOTAL, GASTOS Y PESO */}
-                {/* SUBTOTAL, GASTOS Y PESO */}
-<div className="space-y-3 md:space-y-4 border-b border-dashed pb-4 md:pb-6 mb-4 md:mb-6" style={{ borderColor: '#00162f20' }}>
-  <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium">
-    <span>Subtotal:</span>
-    <span className="font-bold text-black">{formatPrice(subtotal)}</span>
-  </div>
-  <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium">
-    <span>Gastos de Maniobra (4%):</span>
-    <span className="font-bold text-black">{formatPrice(gastosManiobra)}</span>
-  </div>
-  <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium pt-1">
-    <span>Peso total:</span>
-    <div className="text-right">
-      <span className="font-bold text-black">{totalWeightKg.toFixed(2)} kg</span>
-      {totalWeightTon >= 0.01 && <span className="text-xs text-gray-600 ml-1">({totalWeightTon.toFixed(3)} ton)</span>}
-    </div>
-  </div>
-  
-  {/* Costo de envío siempre que la zona sea válida */}
-  {envioInfo.valido && (
     <>
-      <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium">
-        <span>Costo de envío:</span>
-        <span className="font-bold text-black">
-          {envioInfo.costo === 0 ? 'Gratuito' : formatPrice(envioInfo.costo)}
-        </span>
-      </div>
-      {/* Leyenda y municipio (solo si el costo no es cero o si queremos mostrarlo siempre) */}
-      {envioInfo.mensaje && (
-        <div className="text-xs text-gray-500 mt-1 border-t pt-2 border-dashed" style={{ borderColor: '#00162f20' }}>
-          <p className="font-medium text-gray-700">📍 {envioInfo.municipio}, {envioInfo.estado}</p>
-          <p className="text-gray-600">{envioInfo.mensaje}</p>
+      {/* Modal de procesamiento */}
+      {procesando && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl">
+            <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-black font-bold text-lg">Procesando pago...</p>
+            <p className="text-gray-500 text-sm">Por favor no cierres esta ventana</p>
+          </div>
         </div>
       )}
-    </>
-  )}
-</div>
 
-                <div className="flex justify-between text-2xl md:text-3xl font-black mb-6 md:mb-8 text-black">
-                  <span>Total:</span>
-                  <span style={{ color: '#fbbf24' }}>{formatPrice(totalFinal)}</span>
-                </div>
+      <div className="min-h-screen flex flex-col bg-gray-50 pb-20 md:pb-8 text-black">
+        <Header 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm}
+          setCategory={setCategory} 
+          currentCategory={category}
+        />
+        <main className="flex-1 container mx-auto px-2 md:px-4 py-4 md:py-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-center mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 md:mb-0 text-black">
+              Pago de la Compra
+            </h1>
+            {searchTerm && (
+              <p className="text-xs md:text-sm text-gray-700 font-medium">
+                {filteredItems.length} de {items.length} producto{items.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
 
-                {/* TIPO DE COMPROBANTE */}
-                <div className="mb-6 space-y-3">
-                  <h3 className="text-sm md:text-base font-bold text-black">Tipo de comprobante</h3>
-                  <div className="flex flex-col gap-2">
-                    <label className="flex items-center gap-2 text-sm md:text-base cursor-pointer text-gray-800">
-                      <input
-                        type="radio"
-                        name="tipoFactura"
-                        value="sin_factura"
-                        checked={tipoFactura === 'sin_factura'}
-                        onChange={(e) => setTipoFactura(e.target.value)}
-                        className="w-4 h-4 accent-yellow-400"
-                      />
-                      <span>Sin Factura Fiscal</span>
-                    </label>
-                    <label className="flex items-center gap-2 text-sm md:text-base cursor-pointer text-gray-800">
-                      <input
-                        type="radio"
-                        name="tipoFactura"
-                        value="con_factura"
-                        checked={tipoFactura === 'con_factura'}
-                        onChange={(e) => setTipoFactura(e.target.value)}
-                        className="w-4 h-4 accent-yellow-400"
-                      />
-                      <span>Con Factura Fiscal</span>
-                    </label>
+          {filteredItems.length === 0 && searchTerm ? (
+            <div className="text-center py-12 md:py-16 bg-white rounded-xl md:rounded-2xl shadow-md border border-blue-50">
+              <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-100 to-yellow-100 flex items-center justify-center">
+                <span className="text-2xl md:text-3xl">🔍</span>
+              </div>
+              <p className="text-base md:text-lg text-gray-700 mb-4 font-semibold">
+                No se encontraron productos con: {searchTerm}
+              </p>
+              <button 
+                onClick={() => setSearchTerm('')} 
+                className="px-6 py-2.5 rounded-xl font-bold text-sm md:text-base transition-all shadow-lg"
+                style={{ backgroundColor: '#00162f', color: 'white' }}
+              >
+                Limpiar búsqueda
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+              <div className="lg:col-span-2">
+                <TablaItems 
+                  items={filteredItems}
+                  onAjustarCantidad={ajustarCantidad}
+                  onEliminarItem={eliminarItem}
+                  mostrarControles={true}
+                />
+              </div>
+
+              <div className="lg:col-span-1">
+                <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl sticky top-24 border" style={{ borderColor: '#00162f20' }}>
+                  <h2 className="text-lg md:text-xl font-black mb-4 md:mb-6 text-black">
+                    {searchTerm ? 'Total Filtrado' : 'Detalles de Pago'}
+                  </h2>
+
+                  {/* CLIENTE */}
+                  <div className="mb-6 pb-6 border-b border-dashed" style={{ borderColor: '#00162f20' }}>
+                    <h3 className="text-sm md:text-base font-bold mb-3 text-black">Cliente</h3>
+                    <div className="space-y-1 text-xs md:text-sm">
+                      <p className="font-bold text-base md:text-lg text-black">
+                        {user?.nombre || 'Nombre no disponible'}
+                      </p>
+                      <p className="text-gray-800">
+                        <span className="font-semibold">Email:</span> {user?.email || 'Email no disponible'}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                {/* FORMULARIO DE DATOS FISCALES (solo si eligió factura) */}
-                {tipoFactura === 'con_factura' && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-xl border-2" style={{ borderColor: '#00162f20' }}>
-                    <h3 className="text-sm md:text-base font-bold mb-4 text-black">Datos para factura</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-800">RFC *</label>
-                        <input
-                          type="text"
-                          value={rfc}
-                          onChange={(e) => setRfc(e.target.value.toUpperCase())}
-                          maxLength={13}
-                          placeholder="XAXX010101000"
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600 ${
-                            rfc && !rfcValido ? 'border-red-400' : 'border-gray-200'
-                          }`}
-                          style={{ '--tw-ring-color': '#fbbf24' }}
-                          required
-                        />
-                        {rfc && !rfcValido && (
-                          <span className="text-xs text-red-600 mt-1 block">
-                            Formato: 4 letras + 6 números + 3 dígitos/letras
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-800">Razón social o nombre del contribuyente *</label>
-                        <input
-                          type="text"
-                          value={razonSocial}
-                          onChange={(e) => setRazonSocial(e.target.value)}
-                          placeholder="Razón social"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
-                          style={{ '--tw-ring-color': '#fbbf24' }}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-800">Domicilio Fiscal *</label>
-                        <input
-                          type="text"
-                          value={domicilioFiscal}
-                          onChange={(e) => setDomicilioFiscal(e.target.value)}
-                          placeholder="Calle, número, colonia"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
-                          style={{ '--tw-ring-color': '#fbbf24' }}
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-gray-800">Ciudad *</label>
+                  {/* DATOS DE ENTREGA */}
+                  <div className="mb-6 pb-6 border-b border-dashed" style={{ borderColor: '#00162f20' }}>
+                    <h3 className="text-sm md:text-base font-bold mb-3 text-black">Datos de entrega</h3>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1 text-gray-800">Código postal *</label>
+                      <input
+                        type="text"
+                        value={codigoPostalEntrega}
+                        onChange={(e) => setCodigoPostalEntrega(e.target.value.replace(/\D/g, ''))}
+                        maxLength={5}
+                        placeholder="28000"
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600 ${
+                          codigoPostalEntrega && !codigoPostalValido ? 'border-red-400' : 
+                          (codigoPostalValido && !zonaPermitida) ? 'border-red-400' : 'border-gray-200'
+                        }`}
+                        style={{ '--tw-ring-color': '#fbbf24' }}
+                        required
+                      />
+                      {codigoPostalEntrega && !codigoPostalValido && (
+                        <span className="text-xs text-red-600 mt-1 block">Código postal inválido (5 dígitos)</span>
+                      )}
+                      {codigoPostalValido && !zonaPermitida && (
+                        <span className="text-xs text-red-600 mt-1 block">No realizamos envíos a esta zona</span>
+                      )}
+                      {codigoPostalValido && zonaPermitida && envioInfo.valido && (
+                        <div className="mt-2 text-xs text-green-700">
+                          <p>Municipio: {envioInfo.municipio}, {envioInfo.estado}</p>
+                          <p>{envioInfo.mensaje}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {mostrarCamposEntrega && (
+                      <>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-1 text-gray-800">Teléfono de contacto *</label>
+                          <input
+                            type="tel"
+                            value={telefonoContacto}
+                            onChange={(e) => setTelefonoContacto(e.target.value)}
+                            placeholder="3121234567 o 312-123-4567"
+                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600 ${
+                              telefonoContacto && !telefonoValido ? 'border-red-400' : 'border-gray-200'
+                            }`}
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                            required
+                          />
+                          {telefonoContacto && !telefonoValido && (
+                            <span className="text-xs text-red-600 mt-1 block">Teléfono inválido (10 dígitos)</span>
+                          )}
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-1 text-gray-800">Dirección de entrega *</label>
                           <input
                             type="text"
-                            value={ciudad}
-                            onChange={(e) => setCiudad(e.target.value)}
-                            placeholder="Colima"
+                            value={direccionEntrega}
+                            onChange={(e) => setDireccionEntrega(e.target.value)}
+                            placeholder="Calle, número, colonia, ciudad, estado"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-1 text-gray-800">Referencia Google Maps (opcional)</label>
+                          <input
+                            type="text"
+                            value={direccionGoogle}
+                            onChange={(e) => setDireccionGoogle(e.target.value)}
+                            placeholder="Pega aquí la dirección de Google Maps o coordenadas"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* SUBTOTAL, GASTOS Y PESO */}
+                  <div className="space-y-3 md:space-y-4 border-b border-dashed pb-4 md:pb-6 mb-4 md:mb-6" style={{ borderColor: '#00162f20' }}>
+                    <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium">
+                      <span>Subtotal:</span>
+                      <span className="font-bold text-black">{formatPrice(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium">
+                      <span>Gastos de Plataforma (4%):</span>
+                      <span className="font-bold text-black">{formatPrice(gastosManiobra)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium pt-1">
+                      <span>Peso total:</span>
+                      <div className="text-right">
+                        <span className="font-bold text-black">{totalWeightKg.toFixed(2)} kg</span>
+                        {totalWeightTon >= 0.01 && <span className="text-xs text-gray-600 ml-1">({totalWeightTon.toFixed(3)} ton)</span>}
+                      </div>
+                    </div>
+                    
+                    {envioInfo.valido && (
+                      <>
+                        <div className="flex justify-between text-sm md:text-base text-gray-800 font-medium">
+                          <span>Costo de envío con maniobra:</span>
+                          <span className="font-bold text-black">
+                            {envioInfo.costo === 0 ? 'Gratuito' : formatPrice(envioInfo.costo)}
+                          </span>
+                        </div>
+                        {envioInfo.mensaje && (
+                          <div className="text-xs text-gray-500 mt-1 border-t pt-2 border-dashed" style={{ borderColor: '#00162f20' }}>
+                            <p className="font-medium text-gray-700">📍 {envioInfo.municipio}, {envioInfo.estado}</p>
+                            <p className="text-gray-600">{envioInfo.mensaje}</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between text-2xl md:text-3xl font-black mb-6 md:mb-8 text-black">
+                    <span>Total:</span>
+                    <span style={{ color: '#004d0' }}>$ {formatPrice(totalFinal)}</span>
+                  </div>
+
+                  {/* TIPO DE COMPROBANTE */}
+                  <div className="mb-6 space-y-3">
+                    <h3 className="text-sm md:text-base font-bold text-black">Tipo de comprobante</h3>
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-center gap-2 text-sm md:text-base cursor-pointer text-gray-800">
+                        <input
+                          type="radio"
+                          name="tipoFactura"
+                          value="sin_factura"
+                          checked={tipoFactura === 'sin_factura'}
+                          onChange={(e) => setTipoFactura(e.target.value)}
+                          className="w-4 h-4 accent-yellow-400"
+                        />
+                        <span>Sin Factura Fiscal</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm md:text-base cursor-pointer text-gray-800">
+                        <input
+                          type="radio"
+                          name="tipoFactura"
+                          value="con_factura"
+                          checked={tipoFactura === 'con_factura'}
+                          onChange={(e) => setTipoFactura(e.target.value)}
+                          className="w-4 h-4 accent-yellow-400"
+                        />
+                        <span>Con Factura Fiscal</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* FORMULARIO DE DATOS FISCALES (solo si eligió factura) */}
+                  {tipoFactura === 'con_factura' && (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-xl border-2" style={{ borderColor: '#00162f20' }}>
+                      <h3 className="text-sm md:text-base font-bold mb-4 text-black">Datos para factura</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-800">RFC *</label>
+                          <input
+                            type="text"
+                            value={rfc}
+                            onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                            maxLength={13}
+                            placeholder="XAXX010101000"
+                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600 ${
+                              rfc && !rfcValido ? 'border-red-400' : 'border-gray-200'
+                            }`}
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                            required
+                          />
+                          {rfc && !rfcValido && (
+                            <span className="text-xs text-red-600 mt-1 block">
+                              Formato: 4 letras + 6 números + 3 dígitos/letras
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-800">Razón social o nombre del contribuyente *</label>
+                          <input
+                            type="text"
+                            value={razonSocial}
+                            onChange={(e) => setRazonSocial(e.target.value)}
+                            placeholder="Razón social"
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
                             style={{ '--tw-ring-color': '#fbbf24' }}
                             required
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1 text-gray-800">Estado *</label>
+                          <label className="block text-sm font-medium mb-1 text-gray-800">Domicilio Fiscal *</label>
+                          <input
+                            type="text"
+                            value={domicilioFiscal}
+                            onChange={(e) => setDomicilioFiscal(e.target.value)}
+                            placeholder="Calle, número, colonia"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
+                            style={{ '--tw-ring-color': '#fbbf24' }}
+                            required
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-800">Ciudad *</label>
+                            <input
+                              type="text"
+                              value={ciudad}
+                              onChange={(e) => setCiudad(e.target.value)}
+                              placeholder="Colima"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
+                              style={{ '--tw-ring-color': '#fbbf24' }}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-800">Estado *</label>
+                            <select
+                              value={estado}
+                              onChange={(e) => setEstado(e.target.value)}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black"
+                              style={{ '--tw-ring-color': '#fbbf24' }}
+                              required
+                            >
+                              <option value="" className="text-gray-700">Selecciona un estado</option>
+                              {['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Guanajuato','Guerrero','Hidalgo','Jalisco','México','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'].map(est => (
+                                <option key={est} value={est} className="text-black">{est}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-800">Código Postal *</label>
+                            <input
+                              type="text"
+                              value={codigoPostal}
+                              onChange={(e) => setCodigoPostal(e.target.value)}
+                              maxLength={5}
+                              placeholder="28050"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
+                              style={{ '--tw-ring-color': '#fbbf24' }}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-800">Régimen Fiscal *</label>
                           <select
-                            value={estado}
-                            onChange={(e) => setEstado(e.target.value)}
+                            value={regimenFiscal}
+                            onChange={(e) => setRegimenFiscal(e.target.value)}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black"
                             style={{ '--tw-ring-color': '#fbbf24' }}
                             required
                           >
-                            <option value="" className="text-gray-700">Selecciona un estado</option>
-                            {['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Guanajuato','Guerrero','Hidalgo','Jalisco','México','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'].map(est => (
-                              <option key={est} value={est} className="text-black">{est}</option>
-                            ))}
+                            <option value="616" className="text-black">616 - Sin obligaciones fiscales</option>
+                            <option value="612" className="text-black">612 - Personas Físicas con Actividades Empresariales</option>
+                            <option value="605" className="text-black">605 - Sueldos y Salarios</option>
+                            <option value="606" className="text-black">606 - Arrendamiento</option>
                           </select>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-gray-800">Código Postal *</label>
-                          <input
-                            type="text"
-                            value={codigoPostal}
-                            onChange={(e) => setCodigoPostal(e.target.value)}
-                            maxLength={5}
-                            placeholder="28050"
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black placeholder-gray-600"
-                            style={{ '--tw-ring-color': '#fbbf24' }}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-800">Régimen Fiscal *</label>
-                        <select
-                          value={regimenFiscal}
-                          onChange={(e) => setRegimenFiscal(e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 text-black"
-                          style={{ '--tw-ring-color': '#fbbf24' }}
-                          required
-                        >
-                          <option value="616" className="text-black">616 - Sin obligaciones fiscales</option>
-                          <option value="612" className="text-black">612 - Personas Físicas con Actividades Empresariales</option>
-                          <option value="605" className="text-black">605 - Sueldos y Salarios</option>
-                          <option value="606" className="text-black">606 - Arrendamiento</option>
-                        </select>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={confirmarPago}
-                  disabled={procesando || !formularioCompleto}
-                  className="w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-base md:text-lg transition-all shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3"
-                  style={{
-                    backgroundColor: procesando || !formularioCompleto ? '#e5e7eb' : '#fbbf24',
-                    color: procesando || !formularioCompleto ? '#6b7280' : '#00162f'
-                  }}
-                >
-                  {procesando ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#00162f' }} />
-                      <span>Procesando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle size={20} className="md:w-6 md:h-6" />
-                      Confirmar Pago
-                    </>
                   )}
-                </button>
-                
-                {tieneErrores && (
-                  <div className="mt-4 p-3 rounded-xl border-2" style={{ backgroundColor: '#fef2f220', borderColor: '#ef444450' }}>
-                    <p className="text-red-600 text-[10px] md:text-xs text-center font-black uppercase tracking-wider leading-tight">
-                      ⚠️ CORRIGE EL STOCK MARCADO EN ROJO
-                    </p>
-                  </div>
-                )}
+
+                  <button
+                    onClick={confirmarPago}
+                    disabled={procesando || !formularioCompleto}
+                    className="w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-base md:text-lg transition-all shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3"
+                    style={{
+                      backgroundColor: procesando || !formularioCompleto ? '#e5e7eb' : '#fbbf24',
+                      color: procesando || !formularioCompleto ? '#6b7280' : '#00162f'
+                    }}
+                  >
+                    {procesando ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#00162f' }} />
+                        <span>Procesando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={20} className="md:w-6 md:h-6" />
+                        Confirmar Pago
+                      </>
+                    )}
+                  </button>
+                  
+                  {tieneErrores && (
+                    <div className="mt-4 p-3 rounded-xl border-2" style={{ backgroundColor: '#fef2f220', borderColor: '#ef444450' }}>
+                      <p className="text-red-600 text-[10px] md:text-xs text-center font-black uppercase tracking-wider leading-tight">
+                        ⚠️ CORRIGE EL STOCK MARCADO EN ROJO
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
-      <BottomNav setCategory={setCategory} currentCategory={category} />
-    </div>
+          )}
+        </main>
+        <BottomNav setCategory={setCategory} currentCategory={category} />
+      </div>
+    </>
   );
 }
